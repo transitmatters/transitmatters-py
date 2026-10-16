@@ -1,0 +1,76 @@
+name: Sync upstream OpenAPI spec
+
+on:
+  schedule:
+    - cron: "17 13 * * 1" # Mondays 13:17 UTC (~9am Boston)
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Upstream branch, tag, or SHA to sync to"
+        required: false
+        default: main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-spec
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dev dependencies
+        run: uv sync --dev
+
+      - name: Fetch upstream spec
+        id: sync
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uv run python scripts/sync_spec.py --ref "${{ inputs.ref || 'main' }}"
+
+      - name: Regenerate client
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          uv run openapi-python-client generate \
+            --path spec/openapi.json \
+            --config openapi-config.yml \
+            --meta none \
+            --output-path src/transitmatters/_generated \
+            --overwrite
+
+      - name: Run tests
+        if: steps.sync.outputs.changed == 'true'
+        continue-on-error: true # still open the PR; failures show up in its checks
+        run: uv run pytest -q
+
+      - name: Open pull request
+        if: steps.sync.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/sync-openapi-spec
+          delete-branch: true
+          commit-message: "chore: sync OpenAPI spec to upstream ${{ steps.sync.outputs.short_sha }}"
+          title: "Sync OpenAPI spec to upstream ${{ steps.sync.outputs.short_sha }}"
+          body: |
+            Automated sync of `server/openapi.json` from
+            [transitmatters/t-performance-dash@${{ steps.sync.outputs.short_sha }}](https://github.com/transitmatters/t-performance-dash/commit/${{ steps.sync.outputs.sha }}).
+
+            - `spec/openapi.json` updated
+            - `spec/UPSTREAM_SHA` bumped
+            - `src/transitmatters/_generated/` regenerated
+
+            Review the spec diff for new or changed endpoints, and update the
+            wrapper in `src/transitmatters/` if needed.
+          labels: dependencies
+          add-paths: |
+            spec/
+            src/transitmatters/_generated/
