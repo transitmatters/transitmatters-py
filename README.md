@@ -7,7 +7,7 @@ as Python objects: travel times, headways, dwells, ridership, service levels,
 delays, speed restrictions, and alerts.
 
 ```sh
-pip install transitmatters-py
+pip install transitmatters
 ```
 
 ```python

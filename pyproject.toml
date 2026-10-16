@@ -1,5 +1,5 @@
 [project]
-name = "transitmatters-py"
+name = "transitmatters"
 version = "0.1.0"
 description = "Official Python client for the TransitMatters Data Dashboard API"
 readme = "README.md"
