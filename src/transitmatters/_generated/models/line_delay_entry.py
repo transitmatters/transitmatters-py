@@ -34,25 +34,6 @@ class LineDelayEntry:
         track_issue: Delay attributed to track issues.
         track_work: Delay attributed to track work.
 
-        Attributes:
-            date (str):
-            line (str):
-            total_delay_time (int):
-            brake_problem (int):
-            car_traffic (int):
-            disabled_vehicle (int):
-            door_problem (int):
-            fire (int):
-            flooding (int):
-            mechanical_problem (int):
-            medical_emergency (int):
-            other (int):
-            police_activity (int):
-            power_problem (int):
-            signal_problem (int):
-            switch_problem (int):
-            track_issue (int):
-            track_work (int):
     """
 
     date: str

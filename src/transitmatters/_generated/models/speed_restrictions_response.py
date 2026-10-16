@@ -26,10 +26,6 @@ class SpeedRestrictionsResponse:
         date: Actual date of the data (may be earlier than the requested date). Omitted when unavailable.
         zones: Speed restrictions in effect. Omitted when unavailable.
 
-        Attributes:
-            available (bool):
-            date (None | str | Unset):
-            zones (list[SpeedRestrictionZone] | None | Unset):
     """
 
     available: bool

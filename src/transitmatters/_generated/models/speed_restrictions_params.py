@@ -21,14 +21,13 @@ class SpeedRestrictionsParams:
         line_id: GTFS line identifier (e.g., `line-Red`, `line-Orange`).
         date: Date to query (YYYY-MM-DD).
 
-        Attributes:
-            line_id (str): GTFS rapid transit line identifier: `line-Red`, `line-Orange`, `line-Blue`, or `line-Green`. IDs
-                are case-sensitive. Speed restriction data is only available for rapid transit lines.
-            date (datetime.date): Date to query (YYYY-MM-DD).
     """
 
     line_id: str
+    """ GTFS rapid transit line identifier: `line-Red`, `line-Orange`, `line-Blue`, or `line-Green`. IDs are case-
+    sensitive. Speed restriction data is only available for rapid transit lines. """
     date: datetime.date
+    """ Date to query (YYYY-MM-DD). """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

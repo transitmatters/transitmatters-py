@@ -29,14 +29,6 @@ class HeadwayEvent:
         vehicle_consist: Car numbers separated by `|` (e.g. `1850|1851`), or `null` when unavailable.
         vehicle_label: Vehicle label; may be empty.
 
-        Attributes:
-            route_id (str):
-            direction (str):
-            current_dep_dt (str):
-            headway_time_sec (float):
-            vehicle_label (str):
-            benchmark_headway_time_sec (float | None | Unset):
-            vehicle_consist (None | str | Unset):
     """
 
     route_id: str

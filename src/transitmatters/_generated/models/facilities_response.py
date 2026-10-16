@@ -30,17 +30,14 @@ class FacilitiesResponse:
         jsonapi: JSON:API version information.
         links: JSON:API links.
 
-        Attributes:
-            data (list[Facility]):
-            jsonapi (JsonApiVersion | None | Unset): JSON:API version information.
-
-                Attributes:
-                    version: JSON:API version (e.g. `1.0`).
-            links (FacilitiesResponseLinks | None | Unset):
     """
 
     data: list[Facility]
     jsonapi: JsonApiVersion | None | Unset = UNSET
+    """ JSON:API version information.
+
+    Attributes:
+        version: JSON:API version (e.g. `1.0`). """
     links: FacilitiesResponseLinks | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

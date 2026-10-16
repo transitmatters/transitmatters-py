@@ -29,13 +29,6 @@ class FacilityAttributes:
         longitude: Longitude as a decimal string, or `null`.
         properties: Additional facility properties.
 
-        Attributes:
-            type_ (str):
-            long_name (None | str | Unset):
-            short_name (None | str | Unset):
-            latitude (None | str | Unset):
-            longitude (None | str | Unset):
-            properties (list[FacilityProperty] | None | Unset):
     """
 
     type_: str

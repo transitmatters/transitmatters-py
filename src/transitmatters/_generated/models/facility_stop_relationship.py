@@ -24,15 +24,14 @@ class FacilityStopRelationship:
     Attributes:
         data: Reference to the stop.
 
-        Attributes:
-            data (JsonApiResourceIdentifier | None | Unset): A JSON:API reference to another resource.
-
-                Attributes:
-                    id: Resource ID (e.g. `place-alfcl`).
-                    type: Resource type (e.g. `stop`).
     """
 
     data: JsonApiResourceIdentifier | None | Unset = UNSET
+    """ A JSON:API reference to another resource.
+
+    Attributes:
+        id: Resource ID (e.g. `place-alfcl`).
+        type: Resource type (e.g. `stop`). """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

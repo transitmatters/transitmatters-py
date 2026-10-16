@@ -22,17 +22,16 @@ class RidershipParams:
         end_date: End of date range.
         line_id: Line identifier (e.g., `line-Red`, `line-1`, `line-Fairmount`).
 
-        Attributes:
-            start_date (datetime.date): Start of the date range, inclusive (YYYY-MM-DD).
-            end_date (datetime.date): End of the date range, inclusive (YYYY-MM-DD).
-            line_id (str): Line identifier for ridership data. Rapid transit: `line-Red`, `line-Orange`, `line-Blue`, `line-
-                Green`. Bus: `line-{route}` (e.g. `line-1`, `line-66`). Commuter rail: `line-{line}` (e.g. `line-Fairmount`).
-                Ferry: `line-F1`, `line-F4`, etc.
     """
 
     start_date: datetime.date
+    """ Start of the date range, inclusive (YYYY-MM-DD). """
     end_date: datetime.date
+    """ End of the date range, inclusive (YYYY-MM-DD). """
     line_id: str
+    """ Line identifier for ridership data. Rapid transit: `line-Red`, `line-Orange`, `line-Blue`, `line-Green`.
+    Bus: `line-{route}` (e.g. `line-1`, `line-66`). Commuter rail: `line-{line}` (e.g. `line-Fairmount`). Ferry:
+    `line-F1`, `line-F4`, etc. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

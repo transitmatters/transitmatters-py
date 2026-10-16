@@ -18,9 +18,6 @@ class ErrorResponse:
         Code: Error type (e.g., `BadRequestError`, `ForbiddenError`).
         Message: Description of the problem.
 
-        Attributes:
-            code (str):
-            message (str):
     """
 
     code: str

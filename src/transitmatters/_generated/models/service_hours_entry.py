@@ -19,10 +19,6 @@ class ServiceHoursEntry:
         scheduled: Scheduled service hours.
         delivered: Delivered service hours.
 
-        Attributes:
-            date (str):
-            scheduled (float):
-            delivered (float):
     """
 
     date: str

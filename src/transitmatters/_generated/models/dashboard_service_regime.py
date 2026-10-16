@@ -23,30 +23,29 @@ class DashboardServiceRegime:
         saturday: Saturday service.
         sunday: Sunday service.
 
-        Attributes:
-            weekday (DashboardServiceDay): Scheduled service on one day type.
-
-                Attributes:
-                    cancelled: Whether service is cancelled.
-                    tripsPerHour: Scheduled trips per hour (index 0 = midnight), or `null` when cancelled.
-                    totalTrips: Total scheduled trips.
-            saturday (DashboardServiceDay): Scheduled service on one day type.
-
-                Attributes:
-                    cancelled: Whether service is cancelled.
-                    tripsPerHour: Scheduled trips per hour (index 0 = midnight), or `null` when cancelled.
-                    totalTrips: Total scheduled trips.
-            sunday (DashboardServiceDay): Scheduled service on one day type.
-
-                Attributes:
-                    cancelled: Whether service is cancelled.
-                    tripsPerHour: Scheduled trips per hour (index 0 = midnight), or `null` when cancelled.
-                    totalTrips: Total scheduled trips.
     """
 
     weekday: DashboardServiceDay
+    """ Scheduled service on one day type.
+
+    Attributes:
+        cancelled: Whether service is cancelled.
+        tripsPerHour: Scheduled trips per hour (index 0 = midnight), or `null` when cancelled.
+        totalTrips: Total scheduled trips. """
     saturday: DashboardServiceDay
+    """ Scheduled service on one day type.
+
+    Attributes:
+        cancelled: Whether service is cancelled.
+        tripsPerHour: Scheduled trips per hour (index 0 = midnight), or `null` when cancelled.
+        totalTrips: Total scheduled trips. """
     sunday: DashboardServiceDay
+    """ Scheduled service on one day type.
+
+    Attributes:
+        cancelled: Whether service is cancelled.
+        tripsPerHour: Scheduled trips per hour (index 0 = midnight), or `null` when cancelled.
+        totalTrips: Total scheduled trips. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

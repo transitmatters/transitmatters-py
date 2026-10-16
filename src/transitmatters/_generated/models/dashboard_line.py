@@ -34,21 +34,6 @@ class DashboardLine:
         serviceHistory: Weekly median scheduled trips keyed by week start date.
         serviceRegimes: Scheduled service now, a year ago, and at the pre-COVID baseline.
 
-        Attributes:
-            id (str):
-            short_name (str):
-            long_name (str):
-            route_ids (list[str]):
-            start_date (str):
-            line_kind (str):
-            service_regimes (DashboardServiceRegimes): A line's scheduled service at different points in time.
-
-                Attributes:
-                    current: Current service.
-                    oneYearAgo: Service one year ago.
-                    baseline: Pre-COVID baseline service.
-            ridership_history (DashboardLineRidershiphistory | None | Unset):
-            service_history (DashboardLineServicehistory | None | Unset):
     """
 
     id: str
@@ -58,6 +43,12 @@ class DashboardLine:
     start_date: str
     line_kind: str
     service_regimes: DashboardServiceRegimes
+    """ A line's scheduled service at different points in time.
+
+    Attributes:
+        current: Current service.
+        oneYearAgo: Service one year ago.
+        baseline: Pre-COVID baseline service. """
     ridership_history: DashboardLineRidershiphistory | None | Unset = UNSET
     service_history: DashboardLineServicehistory | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

@@ -24,18 +24,17 @@ class TripMetricsByLineParams:
         agg: Aggregation level — `daily`, `weekly`, or `monthly`.
         line: GTFS line identifier (e.g., `line-red`, `line-green`).
 
-        Attributes:
-            start_date (datetime.date): Start of the date range, inclusive (YYYY-MM-DD).
-            end_date (datetime.date): End of the date range, inclusive (YYYY-MM-DD).
-            agg (TripMetricsByLineParamsAgg): Aggregation period: `daily`, `weekly`, or `monthly`.
-            line (str): GTFS rapid transit line identifier: `line-red`, `line-orange`, `line-blue`, `line-green`, or `line-
-                mattapan`.
     """
 
     start_date: datetime.date
+    """ Start of the date range, inclusive (YYYY-MM-DD). """
     end_date: datetime.date
+    """ End of the date range, inclusive (YYYY-MM-DD). """
     agg: TripMetricsByLineParamsAgg
+    """ Aggregation period: `daily`, `weekly`, or `monthly`. """
     line: str
+    """ GTFS rapid transit line identifier: `line-red`, `line-orange`, `line-blue`, `line-green`, or `line-
+    mattapan`. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

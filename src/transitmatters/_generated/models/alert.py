@@ -24,10 +24,6 @@ class Alert:
         valid_to: End time in the same format, or `null` for open-ended alerts.
         text: Alert header text.
 
-        Attributes:
-            valid_from (str):
-            valid_to (None | str | Unset):
-            text (None | str | Unset):
     """
 
     valid_from: str

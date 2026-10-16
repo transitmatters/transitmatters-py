@@ -24,19 +24,18 @@ class ScheduledServiceParams:
         route_id: Route identifier (e.g., `Red`, `1`, `CR-Fairmount`).
         agg: Aggregation level — `daily`, `weekly`, or `monthly`.
 
-        Attributes:
-            start_date (datetime.date): Start of the date range, inclusive (YYYY-MM-DD).
-            end_date (datetime.date): End of the date range, inclusive (YYYY-MM-DD).
-            route_id (str): MBTA route ID. Rapid transit: `Red`, `Orange`, `Blue`, `Green-B`-`Green-E`, `Mattapan`. Bus:
-                numeric string (e.g. `1`, `66`). Commuter rail: `CR-{line}` (e.g. `CR-Fairmount`). Ferry: `Boat-F1`, `Boat-F4`,
-                etc. Use `/api/routes` to list all valid route IDs.
-            agg (ScheduledServiceParamsAgg): Aggregation period: `daily`, `weekly`, or `monthly`.
     """
 
     start_date: datetime.date
+    """ Start of the date range, inclusive (YYYY-MM-DD). """
     end_date: datetime.date
+    """ End of the date range, inclusive (YYYY-MM-DD). """
     route_id: str
+    """ MBTA route ID. Rapid transit: `Red`, `Orange`, `Blue`, `Green-B`-`Green-E`, `Mattapan`. Bus: numeric string
+    (e.g. `1`, `66`). Commuter rail: `CR-{line}` (e.g. `CR-Fairmount`). Ferry: `Boat-F1`, `Boat-F4`, etc. Use
+    `/api/routes` to list all valid route IDs. """
     agg: ScheduledServiceParamsAgg
+    """ Aggregation period: `daily`, `weekly`, or `monthly`. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

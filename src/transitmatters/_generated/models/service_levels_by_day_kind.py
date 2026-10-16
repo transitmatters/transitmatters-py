@@ -26,30 +26,26 @@ class ServiceLevelsByDayKind:
         saturday: Saturday service breakdown.
         sunday: Sunday service breakdown.
 
-        Attributes:
-            weekday (ByDayKindServiceLevels | None | Unset): Scheduled service for a specific day type (weekday, Saturday,
-                or Sunday).
-
-                Attributes:
-                    date: Reference date (YYYY-MM-DD).
-                    service_levels: Scheduled trips by hour (index 0 = midnight); empty if unavailable.
-            saturday (ByDayKindServiceLevels | None | Unset): Scheduled service for a specific day type (weekday, Saturday,
-                or Sunday).
-
-                Attributes:
-                    date: Reference date (YYYY-MM-DD).
-                    service_levels: Scheduled trips by hour (index 0 = midnight); empty if unavailable.
-            sunday (ByDayKindServiceLevels | None | Unset): Scheduled service for a specific day type (weekday, Saturday, or
-                Sunday).
-
-                Attributes:
-                    date: Reference date (YYYY-MM-DD).
-                    service_levels: Scheduled trips by hour (index 0 = midnight); empty if unavailable.
     """
 
     weekday: ByDayKindServiceLevels | None | Unset = UNSET
+    """ Scheduled service for a specific day type (weekday, Saturday, or Sunday).
+
+    Attributes:
+        date: Reference date (YYYY-MM-DD).
+        service_levels: Scheduled trips by hour (index 0 = midnight); empty if unavailable. """
     saturday: ByDayKindServiceLevels | None | Unset = UNSET
+    """ Scheduled service for a specific day type (weekday, Saturday, or Sunday).
+
+    Attributes:
+        date: Reference date (YYYY-MM-DD).
+        service_levels: Scheduled trips by hour (index 0 = midnight); empty if unavailable. """
     sunday: ByDayKindServiceLevels | None | Unset = UNSET
+    """ Scheduled service for a specific day type (weekday, Saturday, or Sunday).
+
+    Attributes:
+        date: Reference date (YYYY-MM-DD).
+        service_levels: Scheduled trips by hour (index 0 = midnight); empty if unavailable. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

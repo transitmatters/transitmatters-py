@@ -23,10 +23,6 @@ class TimePredictionWeek:
         week: Week start date (`YYYY-MM-DD`).
         prediction: Accuracy per prediction-horizon bin.
 
-        Attributes:
-            route_id (str):
-            week (str):
-            prediction (list[TimePredictionBucket]):
     """
 
     route_id: str

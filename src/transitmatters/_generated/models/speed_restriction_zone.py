@@ -31,18 +31,6 @@ class SpeedRestrictionZone:
         speedMph: Speed limit in miles per hour.
         trackFeet: Length of restricted track in feet.
 
-        Attributes:
-            id (str):
-            date (str):
-            line_id (str):
-            description (str):
-            direction (str):
-            reason (str):
-            reported (str):
-            speed_mph (int):
-            track_feet (int):
-            from_stop_id (None | str | Unset):
-            to_stop_id (None | str | Unset):
     """
 
     id: str

@@ -12,42 +12,39 @@ T = TypeVar("T", bound="HeadwayAggregateByDate")
 
 @_attrs_define
 class HeadwayAggregateByDate:
-    """Headway statistics for one service date, with bunching and on-time counts.
-
-    Attributes:
-        count (int): Number of events.
-        mean (float): Mean, in seconds.
-        min_ (float): Minimum, in seconds.
-        max_ (float): Maximum, in seconds.
-        std (float): Population standard deviation, in seconds.
-        sum_ (float): Sum, in seconds.
-        field_25 (float): 25th percentile, in seconds.
-        field_50 (float): Median, in seconds.
-        field_75 (float): 75th percentile, in seconds.
-        service_date (str): Service date (`YYYY-MM-DD`).
-        peak (str): `all` for the whole day. `/api/aggregate/traveltimes2` also has `am_peak`, `pm_peak` and `off_peak`
-            rows.
-        holiday (bool): Whether the service date is a US federal holiday.
-        weekend (bool): Whether the service date is a Saturday or Sunday.
-        bunched (int): Number of headways at most half the scheduled headway (0 when there is no schedule).
-        on_time (int): Number of headways within 25% of the scheduled headway (0 when there is no schedule).
-    """
+    """Headway statistics for one service date, with bunching and on-time counts."""
 
     count: int
+    """ Number of events. """
     mean: float
+    """ Mean, in seconds. """
     min_: float
+    """ Minimum, in seconds. """
     max_: float
+    """ Maximum, in seconds. """
     std: float
+    """ Population standard deviation, in seconds. """
     sum_: float
+    """ Sum, in seconds. """
     field_25: float
+    """ 25th percentile, in seconds. """
     field_50: float
+    """ Median, in seconds. """
     field_75: float
+    """ 75th percentile, in seconds. """
     service_date: str
+    """ Service date (`YYYY-MM-DD`). """
     peak: str
+    """ `all` for the whole day. `/api/aggregate/traveltimes2` also has `am_peak`, `pm_peak` and `off_peak` rows.
+    """
     holiday: bool
+    """ Whether the service date is a US federal holiday. """
     weekend: bool
+    """ Whether the service date is a Saturday or Sunday. """
     bunched: int
+    """ Number of headways at most half the scheduled headway (0 when there is no schedule). """
     on_time: int
+    """ Number of headways within 25% of the scheduled headway (0 when there is no schedule). """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

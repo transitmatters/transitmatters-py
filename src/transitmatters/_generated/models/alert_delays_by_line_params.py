@@ -25,19 +25,17 @@ class AlertDelaysByLineParams:
         line: Line identifier (e.g., `Red`, `Orange`, `Green-B`).
         agg: Aggregation level — `daily` or `weekly`. Defaults to `weekly`.
 
-        Attributes:
-            start_date (datetime.date): Start of the date range, inclusive (YYYY-MM-DD).
-            end_date (datetime.date): End of the date range, inclusive (YYYY-MM-DD).
-            line (str): MBTA line identifier. Rapid transit: `Red`, `Orange`, `Blue`, `Green-B`-`Green-E`, `Mattapan`.
-                Commuter rail: `CR-Fairmount`, `CR-Lowell`, etc.
-            agg (AlertDelaysByLineParamsAgg | Unset): Aggregation period: `daily` or `weekly`. Default:
-                AlertDelaysByLineParamsAgg.WEEKLY.
     """
 
     start_date: datetime.date
+    """ Start of the date range, inclusive (YYYY-MM-DD). """
     end_date: datetime.date
+    """ End of the date range, inclusive (YYYY-MM-DD). """
     line: str
+    """ MBTA line identifier. Rapid transit: `Red`, `Orange`, `Blue`, `Green-B`-`Green-E`, `Mattapan`. Commuter
+    rail: `CR-Fairmount`, `CR-Lowell`, etc. """
     agg: AlertDelaysByLineParamsAgg | Unset = AlertDelaysByLineParamsAgg.WEEKLY
+    """ Aggregation period: `daily` or `weekly`. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

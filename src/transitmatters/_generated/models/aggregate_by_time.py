@@ -12,34 +12,30 @@ T = TypeVar("T", bound="AggregateByTime")
 
 @_attrs_define
 class AggregateByTime:
-    """Statistics for one 30-minute departure-time bucket across the date range.
-
-    Attributes:
-        count (int): Number of events.
-        mean (float): Mean, in seconds.
-        min_ (float): Minimum, in seconds.
-        max_ (float): Maximum, in seconds.
-        std (float): Population standard deviation, in seconds.
-        sum_ (float): Sum, in seconds.
-        field_25 (float): 25th percentile, in seconds.
-        field_50 (float): Median, in seconds.
-        field_75 (float): 75th percentile, in seconds.
-        dep_time_from_epoch (str): Bucket start as `1970-01-01THH:MM:SS`. Departures after midnight and before 03:30 use
-            `1970-01-02`.
-        is_peak_day (bool): `true` for non-holiday weekdays, `false` for weekends and holidays.
-    """
+    """Statistics for one 30-minute departure-time bucket across the date range."""
 
     count: int
+    """ Number of events. """
     mean: float
+    """ Mean, in seconds. """
     min_: float
+    """ Minimum, in seconds. """
     max_: float
+    """ Maximum, in seconds. """
     std: float
+    """ Population standard deviation, in seconds. """
     sum_: float
+    """ Sum, in seconds. """
     field_25: float
+    """ 25th percentile, in seconds. """
     field_50: float
+    """ Median, in seconds. """
     field_75: float
+    """ 75th percentile, in seconds. """
     dep_time_from_epoch: str
+    """ Bucket start as `1970-01-01THH:MM:SS`. Departures after midnight and before 03:30 use `1970-01-02`. """
     is_peak_day: bool
+    """ `true` for non-holiday weekdays, `false` for weekends and holidays. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

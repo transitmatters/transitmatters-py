@@ -30,14 +30,6 @@ class TripMetricsEntry:
         avg_car_age: Average car age in years, if known.
         pct_new_trips: Percentage of trips run with new cars, if known.
 
-        Attributes:
-            date (str):
-            line (str):
-            count (float):
-            total_time (float):
-            miles_covered (float):
-            avg_car_age (float | None | Unset):
-            pct_new_trips (float | None | Unset):
     """
 
     date: str

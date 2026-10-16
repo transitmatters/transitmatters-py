@@ -34,18 +34,6 @@ class StationStop:
         disabled: Whether this stop is currently disabled.
         short: Short display name.
 
-        Attributes:
-            stop_name (str):
-            station (str):
-            order (float):
-            stops (StationStopStops):
-            branches (list[str] | None | Unset):
-            accessible (bool | None | Unset):
-            pedal_park (bool | None | Unset):
-            enclosed_bike_parking (bool | None | Unset):
-            terminus (bool | None | Unset):
-            disabled (bool | None | Unset):
-            short (None | str | Unset):
     """
 
     stop_name: str

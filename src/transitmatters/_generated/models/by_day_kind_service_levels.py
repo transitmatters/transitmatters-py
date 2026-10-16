@@ -21,9 +21,6 @@ class ByDayKindServiceLevels:
         date: Reference date (YYYY-MM-DD).
         service_levels: Scheduled trips by hour (index 0 = midnight); empty if unavailable.
 
-        Attributes:
-            date (str):
-            service_levels (list[int]):
     """
 
     date: str

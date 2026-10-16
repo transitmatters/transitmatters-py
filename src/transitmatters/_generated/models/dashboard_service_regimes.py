@@ -23,30 +23,29 @@ class DashboardServiceRegimes:
         oneYearAgo: Service one year ago.
         baseline: Pre-COVID baseline service.
 
-        Attributes:
-            current (DashboardServiceRegime): Scheduled service by day type.
-
-                Attributes:
-                    weekday: Weekday service.
-                    saturday: Saturday service.
-                    sunday: Sunday service.
-            one_year_ago (DashboardServiceRegime): Scheduled service by day type.
-
-                Attributes:
-                    weekday: Weekday service.
-                    saturday: Saturday service.
-                    sunday: Sunday service.
-            baseline (DashboardServiceRegime): Scheduled service by day type.
-
-                Attributes:
-                    weekday: Weekday service.
-                    saturday: Saturday service.
-                    sunday: Sunday service.
     """
 
     current: DashboardServiceRegime
+    """ Scheduled service by day type.
+
+    Attributes:
+        weekday: Weekday service.
+        saturday: Saturday service.
+        sunday: Sunday service. """
     one_year_ago: DashboardServiceRegime
+    """ Scheduled service by day type.
+
+    Attributes:
+        weekday: Weekday service.
+        saturday: Saturday service.
+        sunday: Sunday service. """
     baseline: DashboardServiceRegime
+    """ Scheduled service by day type.
+
+    Attributes:
+        weekday: Weekday service.
+        saturday: Saturday service.
+        sunday: Sunday service. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

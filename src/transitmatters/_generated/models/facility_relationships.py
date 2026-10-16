@@ -24,14 +24,13 @@ class FacilityRelationships:
     Attributes:
         stop: The stop the facility belongs to.
 
-        Attributes:
-            stop (FacilityStopRelationship | None | Unset): The stop a facility belongs to.
-
-                Attributes:
-                    data: Reference to the stop.
     """
 
     stop: FacilityStopRelationship | None | Unset = UNSET
+    """ The stop a facility belongs to.
+
+    Attributes:
+        data: Reference to the stop. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

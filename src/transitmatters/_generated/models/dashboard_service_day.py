@@ -23,10 +23,6 @@ class DashboardServiceDay:
         tripsPerHour: Scheduled trips per hour (index 0 = midnight), or `null` when cancelled.
         totalTrips: Total scheduled trips.
 
-        Attributes:
-            cancelled (bool):
-            total_trips (int):
-            trips_per_hour (list[float] | None | Unset):
     """
 
     cancelled: bool

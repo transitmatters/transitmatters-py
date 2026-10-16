@@ -35,14 +35,6 @@ class LiveAlert:
         routes: Affected route IDs, possibly repeated (`DELAY` and `DETOUR` only).
         description: Long-form description (elevator and escalator closures only).
 
-        Attributes:
-            id (str):
-            type_ (str):
-            header (str):
-            active_period (list[AlertActivePeriod]):
-            stops (list[int | str]):
-            routes (list[str] | None | Unset):
-            description (None | str | Unset):
     """
 
     id: str

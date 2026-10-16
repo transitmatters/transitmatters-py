@@ -3,7 +3,7 @@ name = "transitmatters-py"
 version = "0.1.0"
 description = "Official Python client for the TransitMatters Data Dashboard API"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 license = "MIT"
 dependencies = [
     "httpx>=0.27",
@@ -24,6 +24,7 @@ dev = [
     "openapi-python-client",
     "ruff",
     "pytest",
+    "pdoc>=16.0.0",
 ]
 
 [build-system]

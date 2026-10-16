@@ -29,26 +29,23 @@ class ServiceRidershipDashboardResponse:
         modeData: Summaries keyed by mode: `rapid-transit`, `regional-rail`, `bus`, `boat`.
         lineData: Per-line data keyed by line ID.
 
-        Attributes:
-            summary_data (DashboardSummary): System-wide or per-mode service and ridership summary.
-
-                Attributes:
-                    totalRidershipHistory: Weekly median ridership keyed by week start date (`YYYY-MM-DD`).
-                    totalServiceHistory: Weekly median scheduled trips keyed by week start date.
-                    totalRidershipPercentage: Currently always 0.
-                    totalServicePercentage: Currently always 0.
-                    totalPassengers: Weekly median ridership in the latest week.
-                    totalTrips: Weekly median scheduled trips in the latest week.
-                    totalRoutesCancelled: Number of routes with cancelled service.
-                    totalReducedService: Number of routes with reduced service.
-                    totalIncreasedService: Number of routes with increased service.
-                    startDate: First date covered (`YYYY-MM-DD`).
-                    endDate: Last date covered (`YYYY-MM-DD`).
-            mode_data (ServiceRidershipDashboardResponseModedata):
-            line_data (ServiceRidershipDashboardResponseLinedata):
     """
 
     summary_data: DashboardSummary
+    """ System-wide or per-mode service and ridership summary.
+
+    Attributes:
+        totalRidershipHistory: Weekly median ridership keyed by week start date (`YYYY-MM-DD`).
+        totalServiceHistory: Weekly median scheduled trips keyed by week start date.
+        totalRidershipPercentage: Currently always 0.
+        totalServicePercentage: Currently always 0.
+        totalPassengers: Weekly median ridership in the latest week.
+        totalTrips: Weekly median scheduled trips in the latest week.
+        totalRoutesCancelled: Number of routes with cancelled service.
+        totalReducedService: Number of routes with reduced service.
+        totalIncreasedService: Number of routes with increased service.
+        startDate: First date covered (`YYYY-MM-DD`).
+        endDate: Last date covered (`YYYY-MM-DD`). """
     mode_data: ServiceRidershipDashboardResponseModedata
     line_data: ServiceRidershipDashboardResponseLinedata
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)

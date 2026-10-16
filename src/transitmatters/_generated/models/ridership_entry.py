@@ -18,9 +18,6 @@ class RidershipEntry:
         date: Week start date (`YYYY-MM-DD`).
         count: Ridership count.
 
-        Attributes:
-            date (str):
-            count (int):
     """
 
     date: str

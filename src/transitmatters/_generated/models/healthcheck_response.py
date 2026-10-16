@@ -28,10 +28,6 @@ class HealthcheckResponse:
         failed_checks_sum: Number of failed checks, if any.
         failed_checks: Map of check name to failure detail.
 
-        Attributes:
-            status (str):
-            failed_checks_sum (int | None | Unset):
-            failed_checks (HealthcheckResponseFailedChecks | None | Unset):
     """
 
     status: str

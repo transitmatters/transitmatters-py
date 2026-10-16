@@ -18,9 +18,6 @@ class ScheduledServiceCount:
         date: Day, Monday of the week, or last day of the month (`YYYY-MM-DD`).
         count: Scheduled trips (the median daily count for weekly and monthly data).
 
-        Attributes:
-            date (str):
-            count (float):
     """
 
     date: str

@@ -26,30 +26,24 @@ class GetScheduledServiceResponse:
         end_date_service_levels: Service levels for the last weekday, Saturday and Sunday in the range.
         counts: Scheduled trip counts at the requested aggregation level.
 
-        Attributes:
-            start_date (str):
-            end_date (str):
-            start_date_service_levels (ServiceLevelsByDayKind): Service levels grouped by day type. A day type is `null`
-                when the date range doesn't include one.
-
-                Attributes:
-                    weekday: Weekday service breakdown.
-                    saturday: Saturday service breakdown.
-                    sunday: Sunday service breakdown.
-            end_date_service_levels (ServiceLevelsByDayKind): Service levels grouped by day type. A day type is `null` when
-                the date range doesn't include one.
-
-                Attributes:
-                    weekday: Weekday service breakdown.
-                    saturday: Saturday service breakdown.
-                    sunday: Sunday service breakdown.
-            counts (list[ScheduledServiceCount]):
     """
 
     start_date: str
     end_date: str
     start_date_service_levels: ServiceLevelsByDayKind
+    """ Service levels grouped by day type. A day type is `null` when the date range doesn't include one.
+
+    Attributes:
+        weekday: Weekday service breakdown.
+        saturday: Saturday service breakdown.
+        sunday: Sunday service breakdown. """
     end_date_service_levels: ServiceLevelsByDayKind
+    """ Service levels grouped by day type. A day type is `null` when the date range doesn't include one.
+
+    Attributes:
+        weekday: Weekday service breakdown.
+        saturday: Saturday service breakdown.
+        sunday: Sunday service breakdown. """
     counts: list[ScheduledServiceCount]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

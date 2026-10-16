@@ -24,11 +24,6 @@ class AlertActivePeriod:
         current: Whether the period includes the current time.
         upcoming: Whether the period has not started yet, or is open-ended.
 
-        Attributes:
-            current (bool):
-            upcoming (bool):
-            start (None | str | Unset):
-            end (None | str | Unset):
     """
 
     current: bool

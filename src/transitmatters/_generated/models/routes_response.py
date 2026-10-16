@@ -23,11 +23,6 @@ class RoutesResponse:
         commuter_rail: Commuter rail route IDs (e.g., `CR-Fairmount`).
         ferry: Ferry route IDs (e.g., `Boat-F1`).
 
-        Attributes:
-            rapid_transit (list[str]):
-            bus (list[str]):
-            commuter_rail (list[str]):
-            ferry (list[str]):
     """
 
     rapid_transit: list[str]

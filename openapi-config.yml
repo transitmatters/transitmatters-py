@@ -1,6 +1,10 @@
-# openapi-config.yml
 project_name_override: transitmatters
 package_name_override: _generated
 post_hooks:
-  - "ruff check --fix ."
+  # Pin the rules: ruff's defaults grew in 0.17, and the generated code can't
+  # be auto-fixed to pass them all, which fails generation.
+  - "ruff check --fix --select E4,E7,E9,F ."
   - "ruff format ."
+# Put property descriptions on the attributes themselves. Otherwise the generator
+# appends its own "Attributes:" list after the one in the spec's descriptions.
+docstrings_on_attributes: true

@@ -29,12 +29,6 @@ class StopsResponse:
         service_start: Service start date, if applicable.
         service_end: Service end date, if applicable.
 
-        Attributes:
-            type_ (str):
-            direction (StopsResponseDirection):
-            stations (list[StationStop]):
-            service_start (None | str | Unset):
-            service_end (None | str | Unset):
     """
 
     type_: str

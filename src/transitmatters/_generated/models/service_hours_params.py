@@ -24,18 +24,17 @@ class ServiceHoursParams:
         end_date: End of date range.
         agg: Aggregation level — `daily`, `weekly`, or `monthly`.
 
-        Attributes:
-            line_id (str): GTFS rapid transit line identifier: `line-red`, `line-orange`, `line-blue`, `line-green`, or
-                `line-mattapan`.
-            start_date (datetime.date): Start of the date range, inclusive (YYYY-MM-DD).
-            end_date (datetime.date): End of the date range, inclusive (YYYY-MM-DD).
-            agg (ServiceHoursParamsAgg): Aggregation period: `daily`, `weekly`, or `monthly`.
     """
 
     line_id: str
+    """ GTFS rapid transit line identifier: `line-red`, `line-orange`, `line-blue`, `line-green`, or `line-
+    mattapan`. """
     start_date: datetime.date
+    """ Start of the date range, inclusive (YYYY-MM-DD). """
     end_date: datetime.date
+    """ End of the date range, inclusive (YYYY-MM-DD). """
     agg: ServiceHoursParamsAgg
+    """ Aggregation period: `daily`, `weekly`, or `monthly`. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

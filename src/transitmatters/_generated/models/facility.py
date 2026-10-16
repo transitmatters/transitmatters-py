@@ -30,29 +30,25 @@ class Facility:
         relationships: Related resources.
         links: JSON:API links.
 
-        Attributes:
-            id (str):
-            type_ (str):
-            attributes (FacilityAttributes): Attributes of an MBTA facility, passed through from the MBTA v3 API.
-
-                Attributes:
-                    type: Facility type (e.g. `ELEVATOR`, `ESCALATOR`, `BIKE_STORAGE`, `PARKING_AREA`).
-                    long_name: Full display name.
-                    short_name: Short display name.
-                    latitude: Latitude as a decimal string (e.g. `"42.352271"`), or `null`.
-                    longitude: Longitude as a decimal string, or `null`.
-                    properties: Additional facility properties.
-            relationships (FacilityRelationships | None | Unset): Relationships of an MBTA facility.
-
-                Attributes:
-                    stop: The stop the facility belongs to.
-            links (FacilityLinks | None | Unset):
     """
 
     id: str
     type_: str
     attributes: FacilityAttributes
+    """ Attributes of an MBTA facility, passed through from the MBTA v3 API.
+
+    Attributes:
+        type: Facility type (e.g. `ELEVATOR`, `ESCALATOR`, `BIKE_STORAGE`, `PARKING_AREA`).
+        long_name: Full display name.
+        short_name: Short display name.
+        latitude: Latitude as a decimal string (e.g. `"42.352271"`), or `null`.
+        longitude: Longitude as a decimal string, or `null`.
+        properties: Additional facility properties. """
     relationships: FacilityRelationships | None | Unset = UNSET
+    """ Relationships of an MBTA facility.
+
+    Attributes:
+        stop: The stop the facility belongs to. """
     links: FacilityLinks | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

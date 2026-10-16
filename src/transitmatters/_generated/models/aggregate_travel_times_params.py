@@ -25,21 +25,20 @@ class AggregateTravelTimesParams:
         from_stop: One or more origin stop IDs.
         to_stop: One or more destination stop IDs.
 
-        Attributes:
-            start_date (datetime.date): Start of the date range, inclusive (YYYY-MM-DD).
-            end_date (datetime.date): End of the date range, inclusive (YYYY-MM-DD).
-            from_stop (list[str] | Unset): Origin MBTA stop ID. Rapid transit: 5-digit numeric (e.g. `70061`). Bus:
-                `{route}-{direction}-{n}` (e.g. `1-0-110`). Commuter rail: `{route}_{direction}_{stop_code}` (e.g. `CR-
-                Fairmount_0_DB-2205-01`). Use `/api/stops/{route_id}` to look up valid stop IDs for a route.
-            to_stop (list[str] | Unset): Destination MBTA stop ID. Rapid transit: 5-digit numeric (e.g. `70061`). Bus:
-                `{route}-{direction}-{n}` (e.g. `1-0-110`). Commuter rail: `{route}_{direction}_{stop_code}` (e.g. `CR-
-                Fairmount_0_DB-2205-01`). Use `/api/stops/{route_id}` to look up valid stop IDs for a route.
     """
 
     start_date: datetime.date
+    """ Start of the date range, inclusive (YYYY-MM-DD). """
     end_date: datetime.date
+    """ End of the date range, inclusive (YYYY-MM-DD). """
     from_stop: list[str] | Unset = UNSET
+    """ Origin MBTA stop ID. Rapid transit: 5-digit numeric (e.g. `70061`). Bus: `{route}-{direction}-{n}` (e.g.
+    `1-0-110`). Commuter rail: `{route}_{direction}_{stop_code}` (e.g. `CR-Fairmount_0_DB-2205-01`). Use
+    `/api/stops/{route_id}` to look up valid stop IDs for a route. """
     to_stop: list[str] | Unset = UNSET
+    """ Destination MBTA stop ID. Rapid transit: 5-digit numeric (e.g. `70061`). Bus: `{route}-{direction}-{n}`
+    (e.g. `1-0-110`). Commuter rail: `{route}_{direction}_{stop_code}` (e.g. `CR-Fairmount_0_DB-2205-01`). Use
+    `/api/stops/{route_id}` to look up valid stop IDs for a route. """
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

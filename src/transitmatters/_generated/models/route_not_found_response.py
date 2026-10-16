@@ -17,8 +17,6 @@ class RouteNotFoundResponse:
     Attributes:
         error: Description of the problem (e.g., `Route 'X' not found`).
 
-        Attributes:
-            error (str):
     """
 
     error: str

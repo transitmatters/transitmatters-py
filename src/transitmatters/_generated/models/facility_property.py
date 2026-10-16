@@ -22,9 +22,6 @@ class FacilityProperty:
         name: Property name (e.g. `direction`, `capacity`, `excludes-stop`).
         value: Property value. Numeric values are sent as strings (e.g. `"20"`).
 
-        Attributes:
-            name (str):
-            value (None | str | Unset):
     """
 
     name: str

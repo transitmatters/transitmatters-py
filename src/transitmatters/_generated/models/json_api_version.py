@@ -21,8 +21,6 @@ class JsonApiVersion:
     Attributes:
         version: JSON:API version (e.g. `1.0`).
 
-        Attributes:
-            version (None | str | Unset):
     """
 
     version: None | str | Unset = UNSET

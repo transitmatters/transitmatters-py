@@ -39,18 +39,6 @@ class DashboardSummary:
         startDate: First date covered (`YYYY-MM-DD`).
         endDate: Last date covered (`YYYY-MM-DD`).
 
-        Attributes:
-            total_ridership_percentage (float):
-            total_service_percentage (float):
-            total_passengers (float):
-            total_trips (float):
-            total_routes_cancelled (int):
-            total_reduced_service (int):
-            total_increased_service (int):
-            start_date (str):
-            end_date (str):
-            total_ridership_history (DashboardSummaryTotalridershiphistory | None | Unset):
-            total_service_history (DashboardSummaryTotalservicehistory | None | Unset):
     """
 
     total_ridership_percentage: float

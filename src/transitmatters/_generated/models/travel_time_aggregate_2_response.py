@@ -23,9 +23,6 @@ class TravelTimeAggregate2Response:
         by_date: Per-date statistics: an `all` row for each date, then a row per peak period.
         by_time: Statistics per 30-minute departure-time bucket, separately for peak and non-peak days.
 
-        Attributes:
-            by_date (list[AggregateByDate]):
-            by_time (list[AggregateByTime]):
     """
 
     by_date: list[AggregateByDate]

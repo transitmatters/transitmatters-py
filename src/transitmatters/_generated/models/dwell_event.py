@@ -29,14 +29,6 @@ class DwellEvent:
         vehicle_consist: Car numbers separated by `|`, or `null` when unavailable.
         vehicle_label: Vehicle label; may be empty.
 
-        Attributes:
-            route_id (str):
-            direction (int):
-            arr_dt (str):
-            dep_dt (str):
-            dwell_time_sec (float):
-            vehicle_label (str):
-            vehicle_consist (None | str | Unset):
     """
 
     route_id: str

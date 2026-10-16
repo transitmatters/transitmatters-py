@@ -23,14 +23,6 @@ class TimePredictionBucket:
         num_predictions: Number of predictions.
         num_accurate_predictions: Number of accurate predictions.
 
-        Attributes:
-            weekly (str):
-            mode (str):
-            route_id (str):
-            bin_ (str):
-            arrival_departure (str):
-            num_predictions (int):
-            num_accurate_predictions (int):
     """
 
     weekly: str

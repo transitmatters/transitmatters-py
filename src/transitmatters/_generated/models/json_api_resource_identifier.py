@@ -18,9 +18,6 @@ class JsonApiResourceIdentifier:
         id: Resource ID (e.g. `place-alfcl`).
         type: Resource type (e.g. `stop`).
 
-        Attributes:
-            id (str):
-            type_ (str):
     """
 
     id: str
