@@ -20,6 +20,9 @@ classifiers = [
 Repository = "https://github.com/transitmatters/transitmatters-py"
 "Upstream API" = "https://github.com/transitmatters/t-performance-dash"
 
+[project.optional-dependencies]
+pandas = ["pandas>=2.2"]
+
 [dependency-groups]
 dev = [
     "openapi-python-client",
@@ -27,6 +30,7 @@ dev = [
     "pytest",
     "pdoc>=16.0.0",
     "pyright>=1.1.414",
+    "pandas",
 ]
 
 [build-system]
