@@ -25,6 +25,7 @@ dev = [
     "ruff",
     "pytest",
     "pdoc>=16.0.0",
+    "pyright>=1.1.414",
 ]
 
 [build-system]

@@ -17,6 +17,7 @@ from transitmatters import (
     AsyncTransitMatters,
     TransitMatters,
 )
+from transitmatters import _endpoints as endpoints
 from transitmatters._generated.api import api as generated_api
 from transitmatters.models import HeadwayEvent, HealthcheckResponse
 
@@ -190,18 +191,21 @@ def test_async_client_raises_api_error():
 
 
 def test_async_client_mirrors_sync_client():
-    def public(cls: type) -> set[str]:
-        return {name for name in dir(cls) if not name.startswith("_")}
+    def methods(cls: type) -> dict[str, inspect.Signature]:
+        return {
+            name: inspect.signature(member)
+            for name, member in inspect.getmembers(cls, inspect.isfunction)
+            if not name.startswith("_") and name not in {"close", "aclose"}
+        }
 
-    assert public(TransitMatters) - {"close"} == public(AsyncTransitMatters) - {
-        "aclose"
-    }
+    assert methods(TransitMatters) == methods(AsyncTransitMatters)
 
 
 @pytest.mark.parametrize(
     "endpoint", sorted(m.name for m in pkgutil.iter_modules(generated_api.__path__))
 )
 def test_every_generated_endpoint_is_wrapped(endpoint):
-    # Fails when a spec sync adds an endpoint, as a reminder to wrap it here.
-    assert f"{endpoint}.sync_detailed(" in inspect.getsource(TransitMatters)
-    assert f"{endpoint}.asyncio_detailed(" in inspect.getsource(AsyncTransitMatters)
+    # Fails when a spec sync adds an endpoint, as a reminder to wrap it.
+    source = inspect.getsource(endpoints)
+    assert f"{endpoint}.sync_detailed," in source
+    assert f"{endpoint}.asyncio_detailed," in source

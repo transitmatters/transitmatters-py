@@ -2,7 +2,8 @@
 
 Wraps the generated client in `transitmatters._generated` so callers get
 parsed models back directly, errors as exceptions, and can pass dates as
-strings and single IDs without wrapping them in a list.
+strings and single IDs without wrapping them in a list. Requests that fail
+transiently are retried.
 
 ```python
 from transitmatters import TransitMatters
@@ -15,36 +16,19 @@ with TransitMatters() as tm:
 
 from __future__ import annotations
 
-import datetime
-from collections.abc import Container, Mapping, Sequence
+import asyncio
+import email.utils
+import itertools
+import random
+import time
+from collections.abc import Container, Mapping
 from http import HTTPStatus
 from typing import Any, Literal, Self
 
 import httpx
 
-from ._generated.api.api import (
-    get_aggregate_dwells,
-    get_aggregate_headways,
-    get_aggregate_travel_times,
-    get_aggregate_travel_times_v2,
-    get_current_alerts,
-    get_dwells,
-    get_facilities,
-    get_headways,
-    get_healthcheck,
-    get_historical_alerts,
-    get_line_delays,
-    get_ridership,
-    get_routes,
-    get_scheduled_service,
-    get_service_hours,
-    get_service_ridership_dashboard,
-    get_speed_restrictions,
-    get_stops_for_route,
-    get_time_predictions,
-    get_travel_times,
-    get_trip_metrics,
-)
+from . import _endpoints as ep
+from ._endpoints import Agg, Call, DateLike, OneOrMany
 from ._generated.client import Client
 from ._generated.models import (
     AggregateByDate,
@@ -52,11 +36,7 @@ from ._generated.models import (
     DwellEvent,
     ErrorResponse,
     FacilitiesResponse,
-    GetLineDelaysAgg,
-    GetScheduledServiceAgg,
     GetScheduledServiceResponse,
-    GetServiceHoursAgg,
-    GetTripMetricsAgg,
     HeadwayAggregateByDate,
     HeadwayEvent,
     HealthcheckResponse,
@@ -74,42 +54,42 @@ from ._generated.models import (
     TravelTimeEvent,
     TripMetricsEntry,
 )
-from ._generated.types import UNSET, Response, Unset
-from .errors import APIError
+from ._generated.types import Response
+from .errors import (
+    APIError,
+    BadRequestError,
+    NetworkError,
+    NotFoundError,
+    RangeTooLongError,
+    ServerError,
+)
 
 DEFAULT_BASE_URL = "https://dashboard-api.labs.transitmatters.org"
 DEFAULT_TIMEOUT = 30.0
+DEFAULT_MAX_RETRIES = 3
 
-DateLike = datetime.date | str
-"""A date, or an ISO 8601 `YYYY-MM-DD` string."""
+_RETRY_STATUSES = frozenset(
+    {
+        HTTPStatus.TOO_MANY_REQUESTS,
+        HTTPStatus.BAD_GATEWAY,
+        HTTPStatus.SERVICE_UNAVAILABLE,
+        HTTPStatus.GATEWAY_TIMEOUT,
+    }
+)
+# Failures where the request may not have reached the API, or the response
+# was cut off. Every endpoint is a GET, so trying again is safe.
+_RETRY_ERRORS = (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError)
+_BACKOFF_BASE = 0.5
+_BACKOFF_CAP = 8.0
+# Give up rather than wait longer than this for a server's Retry-After.
+_MAX_RETRY_AFTER = 60.0
 
-OneOrMany = str | Sequence[str]
-"""A single ID, or several."""
-
-Agg = Literal["daily", "weekly", "monthly"]
-
-# The healthcheck reports failing checks with a 500 and a normal body.
-_HEALTHCHECK_OK = (HTTPStatus.OK, HTTPStatus.INTERNAL_SERVER_ERROR)
-
-
-def _to_date(value: DateLike) -> datetime.date:
-    # datetime subclasses date, but its str() includes the time, which the API rejects.
-    if isinstance(value, datetime.datetime):
-        return value.date()
-    if isinstance(value, datetime.date):
-        return value
-    return datetime.date.fromisoformat(value)
-
-
-def _to_list(values: OneOrMany | None) -> list[str] | Unset:
-    if values is None:
-        return UNSET
-    if isinstance(values, str):
-        return [values]
-    return list(values)
+# Looked up at call time so tests can patch them.
+_sleep = time.sleep
+_asleep = asyncio.sleep
 
 
-def _unwrap(response: Response[Any], ok: Container[int] = (HTTPStatus.OK,)) -> Any:
+def _unwrap(response: Response[Any], ok: Container[int]) -> Any:
     """Return the parsed body of a successful response, or raise APIError."""
     if response.status_code in ok and response.parsed is not None:
         return response.parsed
@@ -120,16 +100,66 @@ def _api_error(response: Response[Any]) -> APIError:
     status = int(response.status_code)
     parsed = response.parsed
     if isinstance(parsed, ErrorResponse):
-        return APIError(
-            status, parsed.message, code=parsed.code, content=response.content
+        # Only trip metrics documents a 403, for ranges that are too long.
+        cls = (
+            RangeTooLongError
+            if status == HTTPStatus.FORBIDDEN
+            else _error_class(status)
         )
+        return cls(status, parsed.message, code=parsed.code, content=response.content)
     if isinstance(parsed, RouteNotFoundResponse):
-        return APIError(status, parsed.error, content=response.content)
+        return NotFoundError(status, parsed.error, content=response.content)
     # Undocumented status, so the body may not be JSON; report it as-is.
     message = response.content.decode(errors="replace").strip()
-    return APIError(
+    return _error_class(status)(
         status, message or response.status_code.phrase, content=response.content
     )
+
+
+def _error_class(status: int) -> type[APIError]:
+    if status == HTTPStatus.BAD_REQUEST:
+        return BadRequestError
+    if status == HTTPStatus.NOT_FOUND:
+        return NotFoundError
+    if status >= HTTPStatus.INTERNAL_SERVER_ERROR:
+        return ServerError
+    return APIError
+
+
+def _network_error(error: httpx.RequestError) -> NetworkError:
+    detail = str(error) or type(error).__name__
+    try:
+        request = error.request
+    except RuntimeError:  # httpx raises this when no request is attached
+        return NetworkError(detail)
+    return NetworkError(f"{request.method} {request.url}: {detail}")
+
+
+def _result[T](call: Call[T], outcome: Response[Any] | httpx.RequestError) -> T:
+    if isinstance(outcome, httpx.RequestError):
+        raise _network_error(outcome) from outcome
+    return call.convert(_unwrap(outcome, call.ok))
+
+
+def _backoff(attempt: int) -> float:
+    delay = min(_BACKOFF_CAP, _BACKOFF_BASE * 2**attempt)
+    return delay / 2 + random.uniform(0, delay / 2)
+
+
+def _retry_after(headers: Mapping[str, str]) -> float | None:
+    """Seconds to wait from a Retry-After header, if it has a usable one."""
+    value = headers.get("retry-after")
+    if value is None:
+        return None
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+    try:
+        when = email.utils.parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    return max(0.0, when.timestamp() - time.time())
 
 
 class _BaseClient:
@@ -138,6 +168,7 @@ class _BaseClient:
         base_url: str = DEFAULT_BASE_URL,
         *,
         timeout: float | httpx.Timeout | None = DEFAULT_TIMEOUT,
+        max_retries: int = DEFAULT_MAX_RETRIES,
         headers: Mapping[str, str] | None = None,
         httpx_args: Mapping[str, Any] | None = None,
     ) -> None:
@@ -146,12 +177,16 @@ class _BaseClient:
             base_url: API root. Defaults to the production API.
             timeout: Seconds to wait for each request, an `httpx.Timeout`,
                 or `None` to wait indefinitely.
+            max_retries: How many times to retry a request that timed out,
+                couldn't connect, or got a 429, 502, 503, or 504, with
+                exponential backoff. `0` disables retries.
             headers: Extra headers to send with every request.
             httpx_args: Extra keyword arguments for the underlying `httpx`
                 client, such as `transport` or `proxy`.
         """
         if isinstance(timeout, int | float):
             timeout = httpx.Timeout(timeout)
+        self._max_retries = max_retries
         self._client = Client(
             base_url=base_url,
             timeout=timeout,
@@ -163,10 +198,30 @@ class _BaseClient:
     def raw_client(self) -> Client:
         """The underlying generated client.
 
-        Pass it to functions in `transitmatters._generated.api` to reach
-        endpoints this class doesn't wrap yet.
+        Pass it to functions in `transitmatters._generated.api` to reach the
+        API directly. Those functions return generated types, which may
+        change whenever the spec is regenerated.
         """
         return self._client
+
+    def _retry_delay(
+        self,
+        attempt: int,
+        outcome: Response[Any] | httpx.RequestError,
+        ok: Container[int],
+    ) -> float | None:
+        """Seconds to wait before retrying, or `None` to stop."""
+        if attempt >= self._max_retries:
+            return None
+        if isinstance(outcome, httpx.RequestError):
+            return _backoff(attempt) if isinstance(outcome, _RETRY_ERRORS) else None
+        status = outcome.status_code
+        if status in ok or status not in _RETRY_STATUSES:
+            return None
+        delay = _retry_after(outcome.headers)
+        if delay is None:
+            return _backoff(attempt)
+        return delay if delay <= _MAX_RETRY_AFTER else None
 
 
 class TransitMatters(_BaseClient):
@@ -174,7 +229,8 @@ class TransitMatters(_BaseClient):
 
     Use it as a context manager, or call `close` when finished, to release
     the connection pool. Methods raise `transitmatters.APIError` when the API
-    returns an error.
+    returns an error, and `transitmatters.NetworkError` when no response
+    arrives.
 
     Stop, route, and line IDs differ by endpoint; each method's docstring
     shows the expected form. `routes` and `stops` list valid IDs.
@@ -190,13 +246,24 @@ class TransitMatters(_BaseClient):
     def __exit__(self, *exc_info: object) -> None:
         self.close()
 
+    def _run[T](self, call: Call[T]) -> T:
+        for attempt in itertools.count():
+            try:
+                outcome = call.sync()
+            except httpx.RequestError as e:
+                outcome = e
+            delay = self._retry_delay(attempt, outcome, call.ok)
+            if delay is None:
+                return _result(call, outcome)
+            _sleep(delay)
+        raise AssertionError("unreachable")
+
     def healthcheck(self) -> HealthcheckResponse:
         """Run the API's health checks.
 
         Failing checks come back as `status == "fail"` rather than raising.
         """
-        response = get_healthcheck.sync_detailed(client=self._client)
-        return _unwrap(response, ok=_HEALTHCHECK_OK)
+        return self._run(ep.healthcheck(self._client))
 
     def headways(
         self, date: DateLike, *, stop: OneOrMany | None = None
@@ -206,10 +273,7 @@ class TransitMatters(_BaseClient):
         Returns one event per departure. `stop` is one or more MBTA stop IDs,
         e.g. `"70061"`.
         """
-        response = get_headways.sync_detailed(
-            _to_date(date), client=self._client, stop=_to_list(stop)
-        )
-        return _unwrap(response)
+        return self._run(ep.headways(self._client, date, stop=stop))
 
     def dwells(
         self, date: DateLike, *, stop: OneOrMany | None = None
@@ -219,10 +283,7 @@ class TransitMatters(_BaseClient):
         Returns one event per stop a vehicle made. `stop` is one or more MBTA
         stop IDs, e.g. `"70061"`.
         """
-        response = get_dwells.sync_detailed(
-            _to_date(date), client=self._client, stop=_to_list(stop)
-        )
-        return _unwrap(response)
+        return self._run(ep.dwells(self._client, date, stop=stop))
 
     def travel_times(
         self,
@@ -236,13 +297,9 @@ class TransitMatters(_BaseClient):
         Returns one event per trip. Both are one or more MBTA stop IDs, e.g.
         `"70061"`, and must be platforms for the same direction of travel.
         """
-        response = get_travel_times.sync_detailed(
-            _to_date(date),
-            client=self._client,
-            from_stop=_to_list(from_stop),
-            to_stop=_to_list(to_stop),
+        return self._run(
+            ep.travel_times(self._client, date, from_stop=from_stop, to_stop=to_stop)
         )
-        return _unwrap(response)
 
     def historical_alerts(
         self, date: DateLike, *, route: OneOrMany | None = None
@@ -251,10 +308,7 @@ class TransitMatters(_BaseClient):
 
         `route` is one or more MBTA route IDs, e.g. `"Red"` or `"66"`.
         """
-        response = get_historical_alerts.sync_detailed(
-            _to_date(date), client=self._client, route=_to_list(route)
-        )
-        return _unwrap(response)
+        return self._run(ep.historical_alerts(self._client, date, route=route))
 
     def aggregate_travel_times(
         self,
@@ -269,14 +323,11 @@ class TransitMatters(_BaseClient):
         Returns one entry per service date and peak period. Stop IDs work as
         in `travel_times`.
         """
-        response = get_aggregate_travel_times.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            from_stop=_to_list(from_stop),
-            to_stop=_to_list(to_stop),
+        return self._run(
+            ep.aggregate_travel_times(
+                self._client, start_date, end_date, from_stop=from_stop, to_stop=to_stop
+            )
         )
-        return _unwrap(response)
 
     def aggregate_travel_times_v2(
         self,
@@ -291,14 +342,11 @@ class TransitMatters(_BaseClient):
         `by_date` matches `aggregate_travel_times`; `by_time` groups trips into
         30-minute departure-time buckets across the whole range.
         """
-        response = get_aggregate_travel_times_v2.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            from_stop=_to_list(from_stop),
-            to_stop=_to_list(to_stop),
+        return self._run(
+            ep.aggregate_travel_times_v2(
+                self._client, start_date, end_date, from_stop=from_stop, to_stop=to_stop
+            )
         )
-        return _unwrap(response)
 
     def aggregate_headways(
         self,
@@ -311,13 +359,9 @@ class TransitMatters(_BaseClient):
 
         Returns one entry per service date, with bunching and on-time counts.
         """
-        response = get_aggregate_headways.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            stop=_to_list(stop),
+        return self._run(
+            ep.aggregate_headways(self._client, start_date, end_date, stop=stop)
         )
-        return _unwrap(response)
 
     def aggregate_dwells(
         self,
@@ -330,18 +374,13 @@ class TransitMatters(_BaseClient):
 
         Returns one entry per service date and peak period.
         """
-        response = get_aggregate_dwells.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            stop=_to_list(stop),
+        return self._run(
+            ep.aggregate_dwells(self._client, start_date, end_date, stop=stop)
         )
-        return _unwrap(response)
 
     def current_alerts(self) -> list[LiveAlert]:
         """Alerts in effect right now, live from the MBTA."""
-        response = get_current_alerts.sync_detailed(client=self._client)
-        return _unwrap(response)
+        return self._run(ep.current_alerts(self._client))
 
     def line_delays(
         self,
@@ -356,14 +395,9 @@ class TransitMatters(_BaseClient):
         Returns one entry per day or week, with minutes of delay by cause.
         `line` is e.g. `"Red"` or `"CR-Fairmount"`.
         """
-        response = get_line_delays.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            line=line,
-            agg=GetLineDelaysAgg(agg),
+        return self._run(
+            ep.line_delays(self._client, start_date, end_date, line=line, agg=agg)
         )
-        return _unwrap(response)
 
     def trip_metrics(
         self,
@@ -378,14 +412,9 @@ class TransitMatters(_BaseClient):
         Returns one entry per day, week, or month. `line` is a rapid transit
         line, e.g. `"line-red"`.
         """
-        response = get_trip_metrics.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            line=line,
-            agg=GetTripMetricsAgg(agg),
+        return self._run(
+            ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
         )
-        return _unwrap(response)
 
     def scheduled_service(
         self,
@@ -400,14 +429,11 @@ class TransitMatters(_BaseClient):
         `counts` has one entry per day, week, or month. `route_id` is an MBTA
         route ID, e.g. `"Red"` or `"66"`.
         """
-        response = get_scheduled_service.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            route_id=route_id,
-            agg=GetScheduledServiceAgg(agg),
+        return self._run(
+            ep.scheduled_service(
+                self._client, start_date, end_date, route_id=route_id, agg=agg
+            )
         )
-        return _unwrap(response)
 
     def ridership(
         self,
@@ -421,18 +447,13 @@ class TransitMatters(_BaseClient):
         Returns one entry per week. `line_id` is e.g. `"line-Red"`,
         `"line-66"`, or `"line-Fairmount"`.
         """
-        response = get_ridership.sync_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            line_id=line_id,
+        return self._run(
+            ep.ridership(self._client, start_date, end_date, line_id=line_id)
         )
-        return _unwrap(response)
 
     def facilities(self) -> FacilitiesResponse:
         """Elevators and escalators, live from the MBTA."""
-        response = get_facilities.sync_detailed(client=self._client)
-        return _unwrap(response)
+        return self._run(ep.facilities(self._client))
 
     def speed_restrictions(
         self, date: DateLike, *, line_id: str
@@ -441,10 +462,7 @@ class TransitMatters(_BaseClient):
 
         `line_id` is case-sensitive, e.g. `"line-Red"`.
         """
-        response = get_speed_restrictions.sync_detailed(
-            client=self._client, line_id=line_id, date=_to_date(date)
-        )
-        return _unwrap(response)
+        return self._run(ep.speed_restrictions(self._client, date, line_id=line_id))
 
     def service_hours(
         self,
@@ -459,36 +477,27 @@ class TransitMatters(_BaseClient):
         Returns one entry per day, week, or month. `line_id` is a rapid
         transit line, e.g. `"line-red"`.
         """
-        response = get_service_hours.sync_detailed(
-            client=self._client,
-            line_id=line_id,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            agg=GetServiceHoursAgg(agg),
+        return self._run(
+            ep.service_hours(
+                self._client, start_date, end_date, line_id=line_id, agg=agg
+            )
         )
-        return _unwrap(response)
 
     def time_predictions(self, route_id: str) -> list[TimePredictionWeek]:
         """Weekly arrival-prediction accuracy for a route, e.g. `"Red"`."""
-        response = get_time_predictions.sync_detailed(
-            client=self._client, route_id=route_id
-        )
-        return _unwrap(response)
+        return self._run(ep.time_predictions(self._client, route_id))
 
     def service_ridership_dashboard(self) -> ServiceRidershipDashboardResponse:
         """Combined service and ridership data behind the overview dashboard."""
-        response = get_service_ridership_dashboard.sync_detailed(client=self._client)
-        return _unwrap(response)
+        return self._run(ep.service_ridership_dashboard(self._client))
 
     def routes(self) -> RoutesResponse:
         """All route IDs the dashboard supports, grouped by mode."""
-        response = get_routes.sync_detailed(client=self._client)
-        return _unwrap(response)
+        return self._run(ep.routes(self._client))
 
     def stops(self, route_id: str) -> StopsResponse:
         """Stations and stop IDs along a route, e.g. `"Red"`."""
-        response = get_stops_for_route.sync_detailed(route_id, client=self._client)
-        return _unwrap(response)
+        return self._run(ep.stops(self._client, route_id))
 
 
 class AsyncTransitMatters(_BaseClient):
@@ -508,31 +517,36 @@ class AsyncTransitMatters(_BaseClient):
     async def __aexit__(self, *exc_info: object) -> None:
         await self.aclose()
 
+    async def _run[T](self, call: Call[T]) -> T:
+        for attempt in itertools.count():
+            try:
+                outcome = await call.asyncio()
+            except httpx.RequestError as e:
+                outcome = e
+            delay = self._retry_delay(attempt, outcome, call.ok)
+            if delay is None:
+                return _result(call, outcome)
+            await _asleep(delay)
+        raise AssertionError("unreachable")
+
     async def healthcheck(self) -> HealthcheckResponse:
         """Run the API's health checks.
 
         Failing checks come back as `status == "fail"` rather than raising.
         """
-        response = await get_healthcheck.asyncio_detailed(client=self._client)
-        return _unwrap(response, ok=_HEALTHCHECK_OK)
+        return await self._run(ep.healthcheck(self._client))
 
     async def headways(
         self, date: DateLike, *, stop: OneOrMany | None = None
     ) -> list[HeadwayEvent]:
         """Time between consecutive departures from `stop` on `date`."""
-        response = await get_headways.asyncio_detailed(
-            _to_date(date), client=self._client, stop=_to_list(stop)
-        )
-        return _unwrap(response)
+        return await self._run(ep.headways(self._client, date, stop=stop))
 
     async def dwells(
         self, date: DateLike, *, stop: OneOrMany | None = None
     ) -> list[DwellEvent]:
         """Time vehicles spent stopped at `stop` on `date`."""
-        response = await get_dwells.asyncio_detailed(
-            _to_date(date), client=self._client, stop=_to_list(stop)
-        )
-        return _unwrap(response)
+        return await self._run(ep.dwells(self._client, date, stop=stop))
 
     async def travel_times(
         self,
@@ -542,22 +556,15 @@ class AsyncTransitMatters(_BaseClient):
         to_stop: OneOrMany | None = None,
     ) -> list[TravelTimeEvent]:
         """Travel time of each trip from `from_stop` to `to_stop` on `date`."""
-        response = await get_travel_times.asyncio_detailed(
-            _to_date(date),
-            client=self._client,
-            from_stop=_to_list(from_stop),
-            to_stop=_to_list(to_stop),
+        return await self._run(
+            ep.travel_times(self._client, date, from_stop=from_stop, to_stop=to_stop)
         )
-        return _unwrap(response)
 
     async def historical_alerts(
         self, date: DateLike, *, route: OneOrMany | None = None
     ) -> list[Alert]:
         """Alerts that were active on `date` for `route`."""
-        response = await get_historical_alerts.asyncio_detailed(
-            _to_date(date), client=self._client, route=_to_list(route)
-        )
-        return _unwrap(response)
+        return await self._run(ep.historical_alerts(self._client, date, route=route))
 
     async def aggregate_travel_times(
         self,
@@ -568,14 +575,11 @@ class AsyncTransitMatters(_BaseClient):
         to_stop: OneOrMany | None = None,
     ) -> list[AggregateByDate]:
         """Daily travel-time statistics between stops over an inclusive date range."""
-        response = await get_aggregate_travel_times.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            from_stop=_to_list(from_stop),
-            to_stop=_to_list(to_stop),
+        return await self._run(
+            ep.aggregate_travel_times(
+                self._client, start_date, end_date, from_stop=from_stop, to_stop=to_stop
+            )
         )
-        return _unwrap(response)
 
     async def aggregate_travel_times_v2(
         self,
@@ -586,14 +590,11 @@ class AsyncTransitMatters(_BaseClient):
         to_stop: OneOrMany | None = None,
     ) -> TravelTimeAggregate2Response:
         """Travel-time statistics between stops, by date and by time of day."""
-        response = await get_aggregate_travel_times_v2.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            from_stop=_to_list(from_stop),
-            to_stop=_to_list(to_stop),
+        return await self._run(
+            ep.aggregate_travel_times_v2(
+                self._client, start_date, end_date, from_stop=from_stop, to_stop=to_stop
+            )
         )
-        return _unwrap(response)
 
     async def aggregate_headways(
         self,
@@ -603,13 +604,9 @@ class AsyncTransitMatters(_BaseClient):
         stop: OneOrMany | None = None,
     ) -> list[HeadwayAggregateByDate]:
         """Daily headway statistics for `stop` over an inclusive date range."""
-        response = await get_aggregate_headways.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            stop=_to_list(stop),
+        return await self._run(
+            ep.aggregate_headways(self._client, start_date, end_date, stop=stop)
         )
-        return _unwrap(response)
 
     async def aggregate_dwells(
         self,
@@ -619,18 +616,13 @@ class AsyncTransitMatters(_BaseClient):
         stop: OneOrMany | None = None,
     ) -> list[AggregateByDate]:
         """Daily dwell-time statistics for `stop` over an inclusive date range."""
-        response = await get_aggregate_dwells.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            stop=_to_list(stop),
+        return await self._run(
+            ep.aggregate_dwells(self._client, start_date, end_date, stop=stop)
         )
-        return _unwrap(response)
 
     async def current_alerts(self) -> list[LiveAlert]:
         """Alerts in effect right now, live from the MBTA."""
-        response = await get_current_alerts.asyncio_detailed(client=self._client)
-        return _unwrap(response)
+        return await self._run(ep.current_alerts(self._client))
 
     async def line_delays(
         self,
@@ -641,14 +633,9 @@ class AsyncTransitMatters(_BaseClient):
         agg: Literal["daily", "weekly"] = "weekly",
     ) -> list[LineDelayEntry]:
         """Alert-attributed delays on `line` over an inclusive date range."""
-        response = await get_line_delays.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            line=line,
-            agg=GetLineDelaysAgg(agg),
+        return await self._run(
+            ep.line_delays(self._client, start_date, end_date, line=line, agg=agg)
         )
-        return _unwrap(response)
 
     async def trip_metrics(
         self,
@@ -659,14 +646,9 @@ class AsyncTransitMatters(_BaseClient):
         agg: Agg,
     ) -> list[TripMetricsEntry]:
         """Speed and travel-time metrics for `line` over an inclusive date range."""
-        response = await get_trip_metrics.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            line=line,
-            agg=GetTripMetricsAgg(agg),
+        return await self._run(
+            ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
         )
-        return _unwrap(response)
 
     async def scheduled_service(
         self,
@@ -677,14 +659,11 @@ class AsyncTransitMatters(_BaseClient):
         agg: Agg,
     ) -> GetScheduledServiceResponse:
         """Scheduled trip counts for a route over an inclusive date range."""
-        response = await get_scheduled_service.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            route_id=route_id,
-            agg=GetScheduledServiceAgg(agg),
+        return await self._run(
+            ep.scheduled_service(
+                self._client, start_date, end_date, route_id=route_id, agg=agg
+            )
         )
-        return _unwrap(response)
 
     async def ridership(
         self,
@@ -694,27 +673,21 @@ class AsyncTransitMatters(_BaseClient):
         line_id: str,
     ) -> list[RidershipEntry]:
         """Ridership on a line over an inclusive date range."""
-        response = await get_ridership.asyncio_detailed(
-            client=self._client,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            line_id=line_id,
+        return await self._run(
+            ep.ridership(self._client, start_date, end_date, line_id=line_id)
         )
-        return _unwrap(response)
 
     async def facilities(self) -> FacilitiesResponse:
         """Elevators and escalators, live from the MBTA."""
-        response = await get_facilities.asyncio_detailed(client=self._client)
-        return _unwrap(response)
+        return await self._run(ep.facilities(self._client))
 
     async def speed_restrictions(
         self, date: DateLike, *, line_id: str
     ) -> SpeedRestrictionsResponse:
         """Speed restrictions in effect on a rapid transit line on `date`."""
-        response = await get_speed_restrictions.asyncio_detailed(
-            client=self._client, line_id=line_id, date=_to_date(date)
+        return await self._run(
+            ep.speed_restrictions(self._client, date, line_id=line_id)
         )
-        return _unwrap(response)
 
     async def service_hours(
         self,
@@ -725,37 +698,24 @@ class AsyncTransitMatters(_BaseClient):
         agg: Agg,
     ) -> list[ServiceHoursEntry]:
         """Scheduled and delivered service hours on a line over a date range."""
-        response = await get_service_hours.asyncio_detailed(
-            client=self._client,
-            line_id=line_id,
-            start_date=_to_date(start_date),
-            end_date=_to_date(end_date),
-            agg=GetServiceHoursAgg(agg),
+        return await self._run(
+            ep.service_hours(
+                self._client, start_date, end_date, line_id=line_id, agg=agg
+            )
         )
-        return _unwrap(response)
 
     async def time_predictions(self, route_id: str) -> list[TimePredictionWeek]:
         """Weekly arrival-prediction accuracy for a route."""
-        response = await get_time_predictions.asyncio_detailed(
-            client=self._client, route_id=route_id
-        )
-        return _unwrap(response)
+        return await self._run(ep.time_predictions(self._client, route_id))
 
     async def service_ridership_dashboard(self) -> ServiceRidershipDashboardResponse:
         """Combined service and ridership data behind the overview dashboard."""
-        response = await get_service_ridership_dashboard.asyncio_detailed(
-            client=self._client
-        )
-        return _unwrap(response)
+        return await self._run(ep.service_ridership_dashboard(self._client))
 
     async def routes(self) -> RoutesResponse:
         """All route IDs the dashboard supports, grouped by mode."""
-        response = await get_routes.asyncio_detailed(client=self._client)
-        return _unwrap(response)
+        return await self._run(ep.routes(self._client))
 
     async def stops(self, route_id: str) -> StopsResponse:
         """Stations and stop IDs along a route."""
-        response = await get_stops_for_route.asyncio_detailed(
-            route_id, client=self._client
-        )
-        return _unwrap(response)
+        return await self._run(ep.stops(self._client, route_id))
