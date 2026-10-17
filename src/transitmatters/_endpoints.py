@@ -15,6 +15,7 @@ from http import HTTPStatus
 from typing import Any, Literal
 
 from . import _convert as convert
+from . import lines
 from . import models as m
 from ._convert import each
 from ._generated.api.api import (
@@ -48,6 +49,7 @@ from ._generated.models import (
     GetTripMetricsAgg,
 )
 from ._generated.types import UNSET, Response, Unset
+from .lines import RouteLike
 
 DateLike = datetime.date | str
 """A date, or an ISO 8601 `YYYY-MM-DD` string."""
@@ -158,7 +160,7 @@ def travel_times(
 
 
 def historical_alerts(
-    client: Client, date: DateLike, *, route: OneOrMany | None
+    client: Client, date: DateLike, *, route: RouteLike | Sequence[RouteLike] | None
 ) -> Call[list[m.Alert]]:
     return _call(
         get_historical_alerts.sync_detailed,
@@ -166,7 +168,7 @@ def historical_alerts(
         each(convert.alert),
         to_date(date),
         client=client,
-        route=_to_list(route),
+        route=_to_list(lines.route_ids(route)),
     )
 
 
@@ -260,7 +262,7 @@ def line_delays(
     start_date: DateLike,
     end_date: DateLike,
     *,
-    line: str,
+    line: RouteLike,
     agg: Literal["daily", "weekly"],
 ) -> Call[list[m.LineDelays]]:
     return _call(
@@ -270,7 +272,7 @@ def line_delays(
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
-        line=line,
+        line=lines.route_id(line, method="line_delays"),
         agg=GetLineDelaysAgg(agg),
     )
 
@@ -280,7 +282,7 @@ def trip_metrics(
     start_date: DateLike,
     end_date: DateLike,
     *,
-    line: str,
+    line: RouteLike,
     agg: Agg,
 ) -> Call[list[m.TripMetrics]]:
     return _call(
@@ -290,7 +292,7 @@ def trip_metrics(
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
-        line=line,
+        line=lines.line_key(line),
         agg=GetTripMetricsAgg(agg),
     )
 
@@ -300,7 +302,7 @@ def scheduled_service(
     start_date: DateLike,
     end_date: DateLike,
     *,
-    route_id: str,
+    route: RouteLike,
     agg: Agg,
 ) -> Call[m.ScheduledService]:
     return _call(
@@ -310,13 +312,13 @@ def scheduled_service(
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
-        route_id=route_id,
+        route_id=lines.route_id(route),
         agg=GetScheduledServiceAgg(agg),
     )
 
 
 def ridership(
-    client: Client, start_date: DateLike, end_date: DateLike, *, line_id: str
+    client: Client, start_date: DateLike, end_date: DateLike, *, line: RouteLike
 ) -> Call[list[m.Ridership]]:
     return _call(
         get_ridership.sync_detailed,
@@ -325,7 +327,7 @@ def ridership(
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
-        line_id=line_id,
+        line_id=lines.gtfs_line_id(line),
     )
 
 
@@ -339,14 +341,14 @@ def facilities(client: Client) -> Call[list[m.Facility]]:
 
 
 def speed_restrictions(
-    client: Client, date: DateLike, *, line_id: str
+    client: Client, date: DateLike, *, line: RouteLike
 ) -> Call[m.SpeedRestrictions]:
     return _call(
         get_speed_restrictions.sync_detailed,
         get_speed_restrictions.asyncio_detailed,
         convert.speed_restrictions,
         client=client,
-        line_id=line_id,
+        line_id=lines.gtfs_line_id(line),
         date=to_date(date),
     )
 
@@ -356,7 +358,7 @@ def service_hours(
     start_date: DateLike,
     end_date: DateLike,
     *,
-    line_id: str,
+    line: RouteLike,
     agg: Agg,
 ) -> Call[list[m.ServiceHours]]:
     return _call(
@@ -364,20 +366,22 @@ def service_hours(
         get_service_hours.asyncio_detailed,
         each(convert.service_hours),
         client=client,
-        line_id=line_id,
+        line_id=lines.line_key(line),
         start_date=to_date(start_date),
         end_date=to_date(end_date),
         agg=GetServiceHoursAgg(agg),
     )
 
 
-def time_predictions(client: Client, route_id: str) -> Call[list[m.TimePredictionWeek]]:
+def time_predictions(
+    client: Client, route: RouteLike
+) -> Call[list[m.TimePredictionWeek]]:
     return _call(
         get_time_predictions.sync_detailed,
         get_time_predictions.asyncio_detailed,
         each(convert.time_prediction_week),
         client=client,
-        route_id=route_id,
+        route_id=lines.route_id(route, method="time_predictions"),
     )
 
 
@@ -401,11 +405,11 @@ def routes(client: Client) -> Call[m.Routes]:
     )
 
 
-def stops(client: Client, route_id: str) -> Call[m.RouteStops]:
+def stops(client: Client, route: RouteLike) -> Call[m.RouteStops]:
     return _call(
         get_stops_for_route.sync_detailed,
         get_stops_for_route.asyncio_detailed,
         convert.route_stops,
-        route_id,
+        lines.route_id(route),
         client=client,
     )

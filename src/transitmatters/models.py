@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
+import difflib
 from dataclasses import dataclass
 from typing import Any
 
@@ -50,6 +51,7 @@ __all__ = [  # noqa: RUF022
     "Routes",
     "RouteStops",
     "Station",
+    "StopPair",
     "Facility",
     "FacilityProperty",
     "Healthcheck",
@@ -506,8 +508,31 @@ class Station(Model):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class StopPair(Model):
+    """The platforms for a trip between two stations, from `RouteStops.trip`.
+
+    Pass them to `TransitMatters.travel_times` or `aggregate_travel_times`:
+
+    ```python
+    pair = tm.stops(Line.RED).trip("Davis", "Porter")
+    tm.travel_times(day, from_stop=pair.from_stop, to_stop=pair.to_stop)
+    ```
+    """
+
+    from_stop: tuple[str, ...]
+    """Stop IDs of the origin's platforms in `direction`."""
+    to_stop: tuple[str, ...]
+    """Stop IDs of the destination's platforms in `direction`."""
+    direction: int
+    """Direction ID of the trip."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class RouteStops(Model):
-    """The stations along a route, with stop IDs by direction."""
+    """The stations along a route, with stop IDs by direction.
+
+    Find a station with `station`, or the stop IDs for a trip with `trip`.
+    """
 
     type: str
     """`"rapidtransit"`, `"bus"`, `"commuter-rail"`, or `"ferry"`."""
@@ -519,6 +544,57 @@ class RouteStops(Model):
     """When the route started running, for routes that changed."""
     service_end: datetime.date | None
     """When the route stopped running, for routes that changed."""
+
+    def station(self, name: str) -> Station:
+        """The station named `name`, e.g. `"Davis"`, or with that station ID,
+        e.g. `"place-davis"`. Case-insensitive.
+
+        Raises:
+            KeyError: No station matches; the message suggests close names.
+        """
+        wanted = name.casefold()
+        for station in self.stations:
+            if wanted in (station.stop_name.casefold(), station.station.casefold()):
+                return station
+        names = [station.stop_name for station in self.stations]
+        close = difflib.get_close_matches(name, names, n=3, cutoff=0.5)
+        hint = f"; did you mean {' or '.join(map(repr, close))}?" if close else ""
+        raise KeyError(f"no station {name!r} on this route{hint}")
+
+    def trip(
+        self, origin: str, destination: str, *, direction: int | None = None
+    ) -> StopPair:
+        """The platforms for travel from `origin` to `destination`.
+
+        Stations are looked up as in `station`. The direction is worked out
+        from the stations' order along the route, unless given.
+
+        Raises:
+            KeyError: A station isn't on this route.
+            ValueError: The stations are the same, on different branches, or
+                have no platforms in `direction`.
+        """
+        start, end = self.station(origin), self.station(destination)
+        if start.station == end.station:
+            raise ValueError(f"{start.stop_name} is both the origin and destination")
+        if (
+            start.branches
+            and end.branches
+            and not set(start.branches) & set(end.branches)
+        ):
+            raise ValueError(
+                f"{start.stop_name} and {end.stop_name} are on different branches"
+            )
+        if direction is None:
+            # Stations are numbered in the direction 1 travels, on every mode.
+            direction = 1 if end.order > start.order else 0
+        from_stop, to_stop = start.stops.get(direction), end.stops.get(direction)
+        if not from_stop or not to_stop:
+            raise ValueError(
+                f"no platforms in direction {direction} between "
+                f"{start.stop_name} and {end.stop_name}"
+            )
+        return StopPair(from_stop=from_stop, to_stop=to_stop, direction=direction)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

@@ -194,7 +194,7 @@ def test_async_client_raises_api_error():
 
     async def run() -> None:
         async with AsyncTransitMatters(httpx_args={"transport": transport}) as tm:
-            await tm.ridership("2024-01-01", "2024-01-31", line_id="line-Red")
+            await tm.ridership("2024-01-01", "2024-01-31", line="line-Red")
 
     with pytest.raises(APIError, match="nope"):
         asyncio.run(run())

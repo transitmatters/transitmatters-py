@@ -7,12 +7,14 @@ their first few items plus one of every other shape (which fields are null),
 and large maps keep their first few keys.
 
 Usage:
-    uv run python scripts/record_fixtures.py
+    uv run python scripts/record_fixtures.py               # every endpoint
+    uv run python scripts/record_fixtures.py get_routes    # just these
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +26,8 @@ FIXTURES = Path(__file__).resolve().parent.parent / "tests" / "fixtures"
 KEEP_ITEMS = 5
 # Objects with more keys than this are maps keyed by ID or date, not records.
 MAP_MIN_KEYS = 25
+# Kept whole: tests use every station on the route.
+UNTRIMMED = {"get_stops_for_route"}
 
 _RANGE = {"start_date": "2025-03-03", "end_date": "2025-03-07"}
 _MONTH = {"start_date": "2025-03-01", "end_date": "2025-03-31"}
@@ -106,12 +110,16 @@ def trim(value: Any) -> Any:
 
 
 def main() -> None:
+    names = sys.argv[1:] or list(REQUESTS)
+    if unknown := set(names) - set(REQUESTS):
+        sys.exit(f"error: unknown endpoint(s): {', '.join(sorted(unknown))}")
     FIXTURES.mkdir(parents=True, exist_ok=True)
     with httpx.Client(base_url=BASE_URL, timeout=60) as client:
-        for name, (path, params) in REQUESTS.items():
+        for name in names:
+            path, params = REQUESTS[name]
             response = client.get(path, params=params)
             response.raise_for_status()
-            body = trim(response.json())
+            body = response.json() if name in UNTRIMMED else trim(response.json())
             out = FIXTURES / f"{name}.json"
             out.write_text(json.dumps(body, indent=1, ensure_ascii=False) + "\n")
             print(

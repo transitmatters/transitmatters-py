@@ -55,17 +55,17 @@ CALLS: dict[str, Callable[[TransitMatters], Any]] = {
         "2025-03-01", "2025-03-31", line="line-red", agg="daily"
     ),
     "get_scheduled_service": lambda tm: tm.scheduled_service(
-        "2025-03-01", "2025-03-31", route_id="Red", agg="daily"
+        "2025-03-01", "2025-03-31", route="Red", agg="daily"
     ),
     "get_ridership": lambda tm: tm.ridership(
-        "2025-01-01", "2025-03-31", line_id="line-Red"
+        "2025-01-01", "2025-03-31", line="line-Red"
     ),
     "get_facilities": lambda tm: tm.facilities(),
     "get_speed_restrictions": lambda tm: tm.speed_restrictions(
-        "2025-03-04", line_id="line-Red"
+        "2025-03-04", line="line-Red"
     ),
     "get_service_hours": lambda tm: tm.service_hours(
-        "2025-03-01", "2025-03-31", line_id="line-red", agg="daily"
+        "2025-03-01", "2025-03-31", line="line-red", agg="daily"
     ),
     "get_time_predictions": lambda tm: tm.time_predictions("Red"),
     "get_service_ridership_dashboard": lambda tm: tm.service_ridership_dashboard(),
@@ -216,9 +216,8 @@ def test_live_alert_stop_ids_are_strings():
     raw = fixture("get_current_alerts")
 
     assert any(isinstance(stop, int) for a in raw for stop in a["stops"])
-    assert all(isinstance(stop, str) for a in alerts for stop in a.stops)
-    assert alerts[0].stops == ("1587",)
-    assert alerts[0].active_period[0].upcoming
+    for alert, raw_alert in zip(alerts, raw, strict=True):
+        assert alert.stops == tuple(str(stop) for stop in raw_alert["stops"])
 
 
 def test_aggregate_stats_have_readable_names():
@@ -288,7 +287,7 @@ def test_speed_restrictions_unavailable():
     )
     tm = TransitMatters(httpx_args={"transport": transport})
 
-    result = tm.speed_restrictions("2015-01-01", line_id="line-Red")
+    result = tm.speed_restrictions("2015-01-01", line="line-Red")
 
     assert result == m.SpeedRestrictions(available=False, date=None, zones=())
 
@@ -305,12 +304,12 @@ def test_route_stops():
 
 
 def test_facilities():
-    andrew = replay("get_facilities")[0]
+    first = replay("get_facilities")[0]
+    raw = fixture("get_facilities")["data"][0]
 
-    assert andrew.type == "ELEVATOR"
-    assert andrew.stop_id == "place-andrw"
-    assert andrew.latitude is None
-    assert m.FacilityProperty(name="excludes-stop", value="13") in andrew.properties
+    assert first.type == raw["attributes"]["type"]
+    assert first.stop_id == raw["relationships"]["stop"]["data"]["id"]
+    assert [p.to_dict() for p in first.properties] == raw["attributes"]["properties"]
 
 
 def test_facility_coordinates_are_floats():
@@ -336,12 +335,19 @@ def test_healthcheck_failures():
 
 def test_service_ridership_dashboard():
     result = replay("get_service_ridership_dashboard")
+    raw = fixture("get_service_ridership_dashboard")["lineData"]["line-Red"]
     red = result.line_data["line-Red"]
 
     assert set(result.mode_data) == {"rapid-transit", "regional-rail", "boat", "bus"}
     assert red.long_name == "Red Line"
-    assert red.ridership_history[datetime.date(2018, 1, 1)] == 122736
-    assert red.service_regimes.current.weekday.total_trips == 241
+    assert red.ridership_history == {
+        datetime.date.fromisoformat(week): count
+        for week, count in raw["ridershipHistory"].items()
+    }
+    assert (
+        red.service_regimes.current.weekday.total_trips
+        == raw["serviceRegimes"]["current"]["weekday"]["totalTrips"]
+    )
 
 
 def test_time_predictions():

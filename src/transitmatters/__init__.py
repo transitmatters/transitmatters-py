@@ -15,6 +15,7 @@ from .errors import (
     ServerError,
     TransitMattersError,
 )
+from .lines import Line
 
 __docformat__ = "google"
 
@@ -22,6 +23,7 @@ __docformat__ = "google"
 __all__ = [  # noqa: RUF022
     "TransitMatters",
     "AsyncTransitMatters",
+    "Line",
     "TransitMattersError",
     "APIError",
     "BadRequestError",

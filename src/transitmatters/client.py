@@ -21,7 +21,7 @@ import email.utils
 import itertools
 import random
 import time
-from collections.abc import Container, Mapping
+from collections.abc import Container, Mapping, Sequence
 from http import HTTPStatus
 from typing import Any, Literal, Self
 
@@ -40,6 +40,7 @@ from .errors import (
     RangeTooLongError,
     ServerError,
 )
+from .lines import RouteLike
 from .models import (
     Alert,
     DailyHeadwayStats,
@@ -231,8 +232,9 @@ class TransitMatters(_BaseClient):
     returns an error, and `transitmatters.NetworkError` when no response
     arrives.
 
-    Stop, route, and line IDs differ by endpoint; each method's docstring
-    shows the expected form. `routes` and `stops` list valid IDs.
+    Methods that take a route or line accept a `transitmatters.Line`, and
+    send the ID each endpoint expects for it. For other routes, pass the ID
+    string shown in each method's docstring; `routes` and `stops` list them.
     """
 
     def close(self) -> None:
@@ -299,11 +301,12 @@ class TransitMatters(_BaseClient):
         )
 
     def historical_alerts(
-        self, date: DateLike, *, route: OneOrMany | None = None
+        self, date: DateLike, *, route: RouteLike | Sequence[RouteLike] | None = None
     ) -> list[Alert]:
         """Alerts that were active on `date` for `route`.
 
-        `route` is one or more MBTA route IDs, e.g. `"Red"` or `"66"`.
+        `route` is one or more `Line`s or MBTA route IDs, e.g. `Line.RED` or
+        `"66"`.
         """
         return self._run(ep.historical_alerts(self._client, date, route=route))
 
@@ -384,13 +387,15 @@ class TransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line: str,
+        line: RouteLike,
         agg: Literal["daily", "weekly"] = "weekly",
     ) -> list[LineDelays]:
         """Alert-attributed delays on `line` over an inclusive date range.
 
         Returns one entry per day or week, with minutes of delay by cause.
-        `line` is e.g. `"Red"` or `"CR-Fairmount"`.
+        `line` is a `Line` or a commuter rail route ID, e.g. `"CR-Fairmount"`.
+        The Green Line is reported by branch, so pass e.g. `"Green-B"`
+        rather than `Line.GREEN`.
         """
         return self._run(
             ep.line_delays(self._client, start_date, end_date, line=line, agg=agg)
@@ -401,13 +406,13 @@ class TransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line: str,
+        line: RouteLike,
         agg: Agg,
     ) -> list[TripMetrics]:
         """Speed and travel-time metrics for `line` over an inclusive date range.
 
         Returns one entry per day, week, or month. `line` is a rapid transit
-        line, e.g. `"line-red"`.
+        `Line`, or its key, e.g. `"line-red"`.
         """
         return self._run(
             ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
@@ -418,17 +423,17 @@ class TransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        route_id: str,
+        route: RouteLike,
         agg: Agg,
     ) -> ScheduledService:
-        """Scheduled trip counts for a route over an inclusive date range.
+        """Scheduled trip counts for `route` over an inclusive date range.
 
-        `counts` has one entry per day, week, or month. `route_id` is an MBTA
-        route ID, e.g. `"Red"` or `"66"`.
+        `counts` has one entry per day, week, or month. `route` is a `Line` or
+        an MBTA route ID, e.g. `"66"`.
         """
         return self._run(
             ep.scheduled_service(
-                self._client, start_date, end_date, route_id=route_id, agg=agg
+                self._client, start_date, end_date, route=route, agg=agg
             )
         )
 
@@ -437,50 +442,52 @@ class TransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line_id: str,
+        line: RouteLike,
     ) -> list[Ridership]:
-        """Ridership on a line over an inclusive date range.
+        """Ridership on `line` over an inclusive date range.
 
-        Returns one entry per week. `line_id` is e.g. `"line-Red"`,
-        `"line-66"`, or `"line-Fairmount"`.
+        Returns one entry per week. `line` is a `Line` or a GTFS line ID, e.g.
+        `"line-66"` or `"line-Fairmount"`.
         """
-        return self._run(
-            ep.ridership(self._client, start_date, end_date, line_id=line_id)
-        )
+        return self._run(ep.ridership(self._client, start_date, end_date, line=line))
 
     def facilities(self) -> list[Facility]:
         """Elevators and escalators, live from the MBTA."""
         return self._run(ep.facilities(self._client))
 
-    def speed_restrictions(self, date: DateLike, *, line_id: str) -> SpeedRestrictions:
+    def speed_restrictions(
+        self, date: DateLike, *, line: RouteLike
+    ) -> SpeedRestrictions:
         """Speed restrictions in effect on a rapid transit line on `date`.
 
-        `line_id` is case-sensitive, e.g. `"line-Red"`.
+        `line` is a `Line`, or its case-sensitive GTFS ID, e.g. `"line-Red"`.
         """
-        return self._run(ep.speed_restrictions(self._client, date, line_id=line_id))
+        return self._run(ep.speed_restrictions(self._client, date, line=line))
 
     def service_hours(
         self,
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line_id: str,
+        line: RouteLike,
         agg: Agg,
     ) -> list[ServiceHours]:
-        """Scheduled and delivered service hours on a line over a date range.
+        """Scheduled and delivered service hours on `line` over a date range.
 
-        Returns one entry per day, week, or month. `line_id` is a rapid
-        transit line, e.g. `"line-red"`.
+        Returns one entry per day, week, or month. `line` is a rapid transit
+        `Line`, or its key, e.g. `"line-red"`.
         """
         return self._run(
-            ep.service_hours(
-                self._client, start_date, end_date, line_id=line_id, agg=agg
-            )
+            ep.service_hours(self._client, start_date, end_date, line=line, agg=agg)
         )
 
-    def time_predictions(self, route_id: str) -> list[TimePredictionWeek]:
-        """Weekly arrival-prediction accuracy for a route, e.g. `"Red"`."""
-        return self._run(ep.time_predictions(self._client, route_id))
+    def time_predictions(self, route: RouteLike) -> list[TimePredictionWeek]:
+        """Weekly arrival-prediction accuracy for `route`.
+
+        `route` is a `Line` or a route ID. The Green Line is reported by
+        branch, so pass e.g. `"Green-B"` rather than `Line.GREEN`.
+        """
+        return self._run(ep.time_predictions(self._client, route))
 
     def service_ridership_dashboard(self) -> ServiceRidershipDashboard:
         """Combined service and ridership data behind the overview dashboard."""
@@ -490,9 +497,13 @@ class TransitMatters(_BaseClient):
         """All route IDs the dashboard supports, grouped by mode."""
         return self._run(ep.routes(self._client))
 
-    def stops(self, route_id: str) -> RouteStops:
-        """Stations and stop IDs along a route, e.g. `"Red"`."""
-        return self._run(ep.stops(self._client, route_id))
+    def stops(self, route: RouteLike) -> RouteStops:
+        """Stations along `route`, with the stop ID of each platform.
+
+        `route` is a `Line` or an MBTA route ID, e.g. `"66"`. Use
+        `RouteStops.trip` to find the stop IDs between two stations.
+        """
+        return self._run(ep.stops(self._client, route))
 
 
 class AsyncTransitMatters(_BaseClient):
@@ -556,7 +567,7 @@ class AsyncTransitMatters(_BaseClient):
         )
 
     async def historical_alerts(
-        self, date: DateLike, *, route: OneOrMany | None = None
+        self, date: DateLike, *, route: RouteLike | Sequence[RouteLike] | None = None
     ) -> list[Alert]:
         """Alerts that were active on `date` for `route`."""
         return await self._run(ep.historical_alerts(self._client, date, route=route))
@@ -624,7 +635,7 @@ class AsyncTransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line: str,
+        line: RouteLike,
         agg: Literal["daily", "weekly"] = "weekly",
     ) -> list[LineDelays]:
         """Alert-attributed delays on `line` over an inclusive date range."""
@@ -637,7 +648,7 @@ class AsyncTransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line: str,
+        line: RouteLike,
         agg: Agg,
     ) -> list[TripMetrics]:
         """Speed and travel-time metrics for `line` over an inclusive date range."""
@@ -650,13 +661,13 @@ class AsyncTransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        route_id: str,
+        route: RouteLike,
         agg: Agg,
     ) -> ScheduledService:
-        """Scheduled trip counts for a route over an inclusive date range."""
+        """Scheduled trip counts for `route` over an inclusive date range."""
         return await self._run(
             ep.scheduled_service(
-                self._client, start_date, end_date, route_id=route_id, agg=agg
+                self._client, start_date, end_date, route=route, agg=agg
             )
         )
 
@@ -665,11 +676,11 @@ class AsyncTransitMatters(_BaseClient):
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line_id: str,
+        line: RouteLike,
     ) -> list[Ridership]:
-        """Ridership on a line over an inclusive date range."""
+        """Ridership on `line` over an inclusive date range."""
         return await self._run(
-            ep.ridership(self._client, start_date, end_date, line_id=line_id)
+            ep.ridership(self._client, start_date, end_date, line=line)
         )
 
     async def facilities(self) -> list[Facility]:
@@ -677,31 +688,27 @@ class AsyncTransitMatters(_BaseClient):
         return await self._run(ep.facilities(self._client))
 
     async def speed_restrictions(
-        self, date: DateLike, *, line_id: str
+        self, date: DateLike, *, line: RouteLike
     ) -> SpeedRestrictions:
         """Speed restrictions in effect on a rapid transit line on `date`."""
-        return await self._run(
-            ep.speed_restrictions(self._client, date, line_id=line_id)
-        )
+        return await self._run(ep.speed_restrictions(self._client, date, line=line))
 
     async def service_hours(
         self,
         start_date: DateLike,
         end_date: DateLike,
         *,
-        line_id: str,
+        line: RouteLike,
         agg: Agg,
     ) -> list[ServiceHours]:
-        """Scheduled and delivered service hours on a line over a date range."""
+        """Scheduled and delivered service hours on `line` over a date range."""
         return await self._run(
-            ep.service_hours(
-                self._client, start_date, end_date, line_id=line_id, agg=agg
-            )
+            ep.service_hours(self._client, start_date, end_date, line=line, agg=agg)
         )
 
-    async def time_predictions(self, route_id: str) -> list[TimePredictionWeek]:
-        """Weekly arrival-prediction accuracy for a route."""
-        return await self._run(ep.time_predictions(self._client, route_id))
+    async def time_predictions(self, route: RouteLike) -> list[TimePredictionWeek]:
+        """Weekly arrival-prediction accuracy for `route`."""
+        return await self._run(ep.time_predictions(self._client, route))
 
     async def service_ridership_dashboard(self) -> ServiceRidershipDashboard:
         """Combined service and ridership data behind the overview dashboard."""
@@ -711,6 +718,6 @@ class AsyncTransitMatters(_BaseClient):
         """All route IDs the dashboard supports, grouped by mode."""
         return await self._run(ep.routes(self._client))
 
-    async def stops(self, route_id: str) -> RouteStops:
-        """Stations and stop IDs along a route."""
-        return await self._run(ep.stops(self._client, route_id))
+    async def stops(self, route: RouteLike) -> RouteStops:
+        """Stations along `route`, with the stop ID of each platform."""
+        return await self._run(ep.stops(self._client, route))
