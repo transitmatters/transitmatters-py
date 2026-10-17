@@ -244,6 +244,9 @@ class TransitMatters(_BaseClient):
     Methods that take a route or line accept a `transitmatters.Line`, and
     send the ID each endpoint expects for it. For other routes, pass the ID
     string shown in each method's docstring; `routes` and `stops` list them.
+
+    Dates are service dates: service after midnight, until about 3:30 AM,
+    belongs to the day before. Date ranges include both ends.
     """
 
     def close(self) -> None:
@@ -334,7 +337,7 @@ class TransitMatters(_BaseClient):
 
         Returns one event per trip. Both are one or more MBTA stop IDs, e.g.
         `"70061"`, and must be platforms for the same direction of travel;
-        `RouteStops.trip` finds them.
+        `transitmatters.models.RouteStops.trip` finds them.
         """
         return self._run_all(
             ep.travel_times(
@@ -555,7 +558,8 @@ class TransitMatters(_BaseClient):
         """Stations along `route`, with the stop ID of each platform.
 
         `route` is a `Line` or an MBTA route ID, e.g. `"66"`. Use
-        `RouteStops.trip` to find the stop IDs between two stations.
+        `transitmatters.models.RouteStops.trip` to find the stop IDs between
+        two stations.
         """
         return self._run(ep.stops(self._client, route))
 

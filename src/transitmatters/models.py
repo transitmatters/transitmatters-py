@@ -84,7 +84,7 @@ class Headway(Model):
     route_id: str
     """Route of the departing trip, e.g. `"Red"`, `"28"`, `"CR-Fairmount"`."""
     direction: int
-    """Direction ID, `0` or `1`. `TransitMatters.stops` names them."""
+    """Direction ID, `0` or `1`. `transitmatters.TransitMatters.stops` names them."""
     current_dep_dt: datetime.datetime
     """Departure time."""
     headway_time_sec: float
@@ -511,7 +511,8 @@ class Station(Model):
 class StopPair(Model):
     """The platforms for a trip between two stations, from `RouteStops.trip`.
 
-    Pass them to `TransitMatters.travel_times` or `aggregate_travel_times`:
+    Pass them to `transitmatters.TransitMatters.travel_times` or
+    `transitmatters.TransitMatters.aggregate_travel_times`:
 
     ```python
     pair = tm.stops(Line.RED).trip("Davis", "Porter")
@@ -557,7 +558,9 @@ class RouteStops(Model):
             if wanted in (station.stop_name.casefold(), station.station.casefold()):
                 return station
         names = [station.stop_name for station in self.stations]
-        close = difflib.get_close_matches(name, names, n=3, cutoff=0.5)
+        close = [n for n in names if wanted in n.casefold()]
+        close += difflib.get_close_matches(name, names, n=3, cutoff=0.5)
+        close = list(dict.fromkeys(close))[:3]
         hint = f"; did you mean {' or '.join(map(repr, close))}?" if close else ""
         raise KeyError(f"no station {name!r} on this route{hint}")
 

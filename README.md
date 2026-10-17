@@ -7,25 +7,37 @@ as Python objects: travel times, headways, dwells, ridership, service levels,
 delays, speed restrictions, and alerts.
 
 ```sh
-pip install transitmatters
+pip install transitmatters            # or 'transitmatters[pandas]' for to_dataframe
 ```
 
 ```python
-from transitmatters import TransitMatters
+from transitmatters import Line, TransitMatters, to_dataframe
 
 tm = TransitMatters()
 
-# Every southbound Red Line trip from Alewife to Braintree on March 4, 2025
-trips = tm.travel_times("2025-03-04", from_stop="70061", to_stop="70105")
+# Southbound Red Line platforms from Davis to Porter
+pair = tm.stops(Line.RED).trip("Davis", "Porter")
+
+# Every trip between them in March 2025
+trips = tm.travel_times(
+    "2025-03-01", "2025-03-31", from_stop=pair.from_stop, to_stop=pair.to_stop
+)
 print(trips[0].dep_dt, trips[0].travel_time_sec)
+# 2025-03-01 05:18:01-05:00 82.0
+
+df = to_dataframe(trips)
 ```
 
-Dates can be `datetime.date` objects or `"YYYY-MM-DD"` strings, and date ranges
-include both ends. Parameters that take IDs accept one string or a list.
+Dates can be `datetime.date` objects or `"YYYY-MM-DD"` strings. Date ranges
+include both ends, and dates are service dates: trips after midnight, until
+about 3:30 AM, count toward the day before. Times are timezone-aware
+`datetime`s in Eastern time.
 
 ## Which method do I want?
 
-**What happened on one day.** Each item is a single event.
+**What happened, trip by trip.** Each item is one event. Pass one date, or a
+start and end date to get every day in between; days are fetched
+concurrently.
 
 | Question | Method | Each item is |
 | --- | --- | --- |
@@ -59,96 +71,125 @@ include both ends. Parameters that take IDs accept one string or a list.
 | Service and ridership across the whole system | `TransitMatters.service_ridership_dashboard` |
 | Is the API healthy? | `TransitMatters.healthcheck` |
 
-## Finding IDs
+## Lines, routes, and stops
 
-Each kind of ID has its own format, and some endpoints spell the same line
-differently. Check this table before guessing:
-
-| Parameter | Used by | Looks like |
-| --- | --- | --- |
-| `stop`, `from_stop`, `to_stop` | `headways`, `dwells`, `travel_times`, `aggregate_*` | `"70061"` (rapid transit), `"1-0-110"` (bus), `"CR-Fairmount_0_DB-2205-01"` (commuter rail) |
-| `route`, `route_id` | `historical_alerts`, `scheduled_service`, `time_predictions`, `stops` | `"Red"`, `"66"`, `"CR-Fairmount"`, `"Boat-F1"` |
-| `line` | `line_delays` | `"Red"`, `"CR-Fairmount"` |
-| `line`, `line_id` | `trip_metrics`, `service_hours` | `"line-red"` (lowercase; rapid transit only) |
-| `line_id` | `ridership` | `"line-Red"`, `"line-66"`, `"line-Fairmount"` |
-| `line_id` | `speed_restrictions` | `"line-Red"` (case-sensitive; rapid transit only) |
-
-`TransitMatters.routes` lists every route ID. `TransitMatters.stops` lists the
-stations on a route, with the stop ID of each platform by direction:
+For the subway, pass a `Line` wherever a method takes a route or line:
 
 ```python
-red = tm.stops("Red")
-print(red.direction.to_dict())  # {'0': 'northbound', '1': 'southbound'}
-for station in red.stations[:3]:
-    print(station.stop_name, station.stops.to_dict())
-# Alewife {'0': ['70061'], '1': ['70061']}
-# Davis {'0': ['70064'], '1': ['70063']}
-# Porter {'0': ['70066'], '1': ['70065']}
+tm.ridership("2024-01-01", "2024-12-31", line=Line.ORANGE)
+tm.trip_metrics("2024-01-01", "2024-12-31", line=Line.RED, agg="monthly")
 ```
 
-Platforms have separate IDs for each direction, so `from_stop` and `to_stop`
-must both be platforms for the direction you're traveling. Southbound from
-Davis to Porter is `from_stop="70063", to_stop="70065"`.
+The API spells lines differently by endpoint (`"Red"`, `"line-red"`,
+`"line-Red"`); a `Line` is sent the right way to each. For buses, commuter
+rail, and ferries, pass the route ID as a string, e.g. `"66"`,
+`"CR-Fairmount"`, or `"Boat-F1"`. `TransitMatters.routes` lists them all.
 
-A stop ID that doesn't exist isn't an error; you just get an empty list back.
+The Green Line's delays and prediction accuracy are reported by branch, so
+`line_delays` and `time_predictions` take `"Green-B"` through `"Green-E"`
+instead of `Line.GREEN`.
+
+### Stop IDs
+
+Events are recorded per platform, and each direction has its own platform
+ID. `TransitMatters.stops` lists a route's stations with their platforms, and
+`transitmatters.models.RouteStops.trip` picks the right ones for travel between two stations:
+
+```python
+red = tm.stops(Line.RED)
+
+red.station("Davis").stops
+# {0: ('70064',), 1: ('70063',)}
+red.directions
+# {0: 'northbound', 1: 'southbound'}
+red.trip("Davis", "Porter")
+# StopPair(from_stop=('70063',), to_stop=('70065',), direction=1)
+
+tm.headways("2025-03-04", stop=red.station("Davis").stops[1])
+```
+
+Stations can be named as on the dashboard (`"Davis"`) or by station ID
+(`"place-davis"`). A stop ID that doesn't exist isn't an error; you just get
+an empty list back.
 
 ## Working with pandas
 
-Every result is a model object (see `transitmatters.models`), and every model
-has `to_dict()`:
+`to_dataframe` turns a list of results into a DataFrame, with one column per
+field. It needs pandas: `pip install 'transitmatters[pandas]'`.
 
 ```python
-import pandas as pd
+from transitmatters import to_dataframe
 
-events = tm.headways("2025-03-04", stop="70061")
-df = pd.DataFrame([e.to_dict() for e in events])
-df["current_dep_dt"] = pd.to_datetime(df["current_dep_dt"])
+df = to_dataframe(tm.headways("2025-03-03", "2025-03-07", stop="70061"))
+df.set_index("current_dep_dt")["headway_time_sec"].resample("1h").median()
 ```
 
-- Timestamps are Eastern local time, formatted `YYYY-MM-DDTHH:MM:SS` with no
-  offset.
-- `to_dict()` uses the API's field names. A few differ from the Python
-  attribute names, e.g. `min` and `25%` instead of `min_` and `field_25`.
-- When a response wraps its list in a field, such as
-  `scheduled_service(...).counts` or `speed_restrictions(...).zones`, build
-  the DataFrame from that field.
+- Time columns are timezone-aware, in `America/New_York`.
+- Date columns, like `service_date`, are `datetime64` at midnight.
+- When a result wraps its list in a field, such as
+  `scheduled_service(...).counts` or `speed_restrictions(...).zones`, pass
+  that field to `to_dataframe`.
 
-## Errors
+Every result is a frozen dataclass from `transitmatters.models`, and has
+`to_dict()` too.
 
-When the API rejects a request, methods raise `transitmatters.APIError`:
+## Errors and retries
+
+When the API rejects a request, methods raise a subclass of
+`transitmatters.APIError`:
 
 ```python
-from transitmatters import APIError
+from transitmatters import NotFoundError
 
 try:
     tm.stops("Purple")
-except APIError as e:
+except NotFoundError as e:
     print(e.status_code, e.message)  # 404 Route 'Purple' not found
 ```
 
+| Exception | When |
+| --- | --- |
+| `BadRequestError` | A parameter is missing or invalid (400). |
+| `NotFoundError` | The route doesn't exist (404). |
+| `RangeTooLongError` | The date range is too long (403). `trip_metrics` splits long ranges to avoid this. |
+| `ServerError` | The API failed (5xx). |
+| `NetworkError` | No response arrived: the connection failed or timed out. |
+
+All of them subclass `TransitMattersError`. Timeouts, connection failures,
+and 429, 502, 503, and 504 responses are retried up to three times with
+exponential backoff before raising; set `TransitMatters(max_retries=0)` to
+turn that off.
+
 ## Async
 
-`transitmatters.AsyncTransitMatters` has the same methods, as coroutines. It's
-useful for fetching many days at once. In Jupyter you can `await` directly in
-a cell.
+`transitmatters.AsyncTransitMatters` has the same methods, as coroutines. In
+Jupyter you can `await` directly in a cell.
 
 ```python
 import asyncio
-from transitmatters import AsyncTransitMatters
+from transitmatters import AsyncTransitMatters, Line
+
 
 async def main():
     async with AsyncTransitMatters() as tm:
-        days = ["2025-03-03", "2025-03-04", "2025-03-05"]
-        return await asyncio.gather(*(tm.headways(d, stop="70061") for d in days))
+        return await asyncio.gather(
+            tm.ridership("2024-01-01", "2024-12-31", line=Line.RED),
+            tm.ridership("2024-01-01", "2024-12-31", line=Line.ORANGE),
+        )
 
-per_day = asyncio.run(main())
+
+red, orange = asyncio.run(main())
 ```
+
+Both clients fetch date ranges concurrently already, up to `max_concurrency`
+requests at once (8 by default).
 
 ## Development
 
 ```sh
 uv sync
 uv run pytest
+uv run ruff check && uv run pyright src tests
 uv run python scripts/docs.py  # preview the API docs at http://localhost:8080
 ```
 
@@ -158,5 +199,12 @@ The API docs are built from this README and the docstrings in
 
 `src/transitmatters/_generated/` is generated from the upstream OpenAPI spec by
 `openapi-python-client`; don't edit it by hand. A weekly workflow syncs the
-spec and opens a PR (see `scripts/sync_spec.py`). The public API lives in
-`src/transitmatters/client.py`.
+spec and opens a PR (see `scripts/sync_spec.py`). The public API wraps it:
+
+- `client.py` holds the clients, and `_endpoints.py` builds each request.
+- `models.py` holds the public models, and `_convert.py` builds them from the
+  generated ones.
+
+When a spec sync adds an endpoint or a field, tests fail until it's wrapped
+and converted. `tests/fixtures/` holds real responses for the model tests;
+refresh one with `uv run python scripts/record_fixtures.py <endpoint>`.

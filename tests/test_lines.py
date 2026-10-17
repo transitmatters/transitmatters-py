@@ -167,6 +167,13 @@ def test_unknown_station_suggests_close_names():
         red().station("Daviss")
 
 
+def test_unknown_station_suggests_names_containing_it():
+    with pytest.raises(
+        KeyError, match=r"'JFK/UMass \(Ashmont\)' or 'JFK/UMass \(Braintree\)'"
+    ):
+        red().station("jfk")
+
+
 def test_trip_infers_direction():
     stops = red()
 

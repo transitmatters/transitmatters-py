@@ -25,8 +25,9 @@ def to_dataframe(items: Iterable[Model]) -> pandas.DataFrame:
 
     Times become timezone-aware `datetime64` columns in Eastern time, and
     dates become `datetime64` columns at midnight. Nested models, such as
-    `TimePredictionWeek.prediction`, stay as objects; pass the nested list
-    to `to_dataframe` instead. An empty list gives an empty DataFrame.
+    `transitmatters.models.TimePredictionWeek.prediction`, stay as objects;
+    pass the nested list to `to_dataframe` instead. An empty list gives an
+    empty DataFrame.
 
     Needs pandas: `pip install 'transitmatters[pandas]'`.
 

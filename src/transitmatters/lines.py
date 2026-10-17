@@ -66,7 +66,8 @@ def route_id(value: RouteLike, *, method: str | None = None) -> str:
     if method and value.branches:
         branches = ", ".join(repr(b) for b in value.branches)
         raise ValueError(
-            f"{method} takes a single Green Line branch, not Line.GREEN: one of {branches}"
+            f"{method} takes a single Green Line branch, not Line.GREEN: "
+            f"one of {branches}"
         )
     return value.route_id
 
