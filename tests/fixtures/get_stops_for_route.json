@@ -1,0 +1,143 @@
+{
+ "type": "rapidtransit",
+ "direction": {
+  "0": "northbound",
+  "1": "southbound"
+ },
+ "stations": [
+  {
+   "stop_name": "Alewife",
+   "branches": [
+    "A",
+    "B"
+   ],
+   "station": "place-alfcl",
+   "order": 1,
+   "stops": {
+    "0": [
+     "70061"
+    ],
+    "1": [
+     "70061"
+    ]
+   },
+   "accessible": true,
+   "enclosed_bike_parking": true,
+   "pedal_park": true,
+   "terminus": true
+  },
+  {
+   "stop_name": "Davis",
+   "branches": [
+    "A",
+    "B"
+   ],
+   "station": "place-davis",
+   "order": 2,
+   "stops": {
+    "0": [
+     "70064"
+    ],
+    "1": [
+     "70063"
+    ]
+   },
+   "accessible": true,
+   "enclosed_bike_parking": true,
+   "pedal_park": true
+  },
+  {
+   "stop_name": "Porter",
+   "branches": [
+    "A",
+    "B"
+   ],
+   "station": "place-portr",
+   "order": 3,
+   "stops": {
+    "0": [
+     "70066"
+    ],
+    "1": [
+     "70065"
+    ]
+   },
+   "accessible": true
+  },
+  {
+   "stop_name": "Harvard",
+   "branches": [
+    "A",
+    "B"
+   ],
+   "station": "place-harsq",
+   "order": 4,
+   "stops": {
+    "0": [
+     "70068"
+    ],
+    "1": [
+     "70067"
+    ]
+   },
+   "accessible": true
+  },
+  {
+   "stop_name": "Central",
+   "branches": [
+    "A",
+    "B"
+   ],
+   "station": "place-cntsq",
+   "order": 5,
+   "stops": {
+    "0": [
+     "70070"
+    ],
+    "1": [
+     "70069"
+    ]
+   },
+   "accessible": true,
+   "enclosed_bike_parking": true
+  },
+  {
+   "stop_name": "Kendall/MIT",
+   "short": "Kendall",
+   "branches": [
+    "A",
+    "B"
+   ],
+   "station": "place-knncl",
+   "order": 6,
+   "stops": {
+    "0": [
+     "70072"
+    ],
+    "1": [
+     "70071"
+    ]
+   },
+   "accessible": true
+  },
+  {
+   "stop_name": "Fields Corner",
+   "short": "Fields Cor.",
+   "branches": [
+    "A"
+   ],
+   "station": "place-fldcr",
+   "order": 103,
+   "stops": {
+    "0": [
+     "70090"
+    ],
+    "1": [
+     "70089"
+    ]
+   },
+   "accessible": true,
+   "enclosed_bike_parking": true
+  }
+ ]
+}

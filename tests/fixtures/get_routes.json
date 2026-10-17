@@ -1,0 +1,30 @@
+{
+ "rapid_transit": [
+  "Red",
+  "Orange",
+  "Blue",
+  "Green",
+  "Mattapan"
+ ],
+ "bus": [
+  "1",
+  "10",
+  "100",
+  "101",
+  "104/109"
+ ],
+ "commuter_rail": [
+  "CR-Fairmount",
+  "CR-Fitchburg",
+  "CR-Franklin",
+  "CR-Greenbush",
+  "CR-Haverhill"
+ ],
+ "ferry": [
+  "Boat-EastBoston",
+  "Boat-F1",
+  "Boat-F10",
+  "Boat-F2H",
+  "Boat-F4"
+ ]
+}

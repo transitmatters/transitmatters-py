@@ -1,0 +1,182 @@
+[
+ {
+  "active_period": [
+   {
+    "current": false,
+    "end": "2026-11-08T13:30:00-05:00",
+    "start": "2026-11-08T07:30:00-05:00",
+    "upcoming": true
+   }
+  ],
+  "header": "Route 45 detoured from 7:30 AM to 1:30 PM on Sun, Nov 8, due to the BAA Half Marathon. No service to Franklin Park Rd or Glenway St.",
+  "id": "1035880",
+  "routes": [
+   "45"
+  ],
+  "stops": [
+   1587
+  ],
+  "type": "DETOUR"
+ },
+ {
+  "active_period": [
+   {
+    "current": true,
+    "end": null,
+    "start": "2026-09-17T11:18:04-04:00",
+    "upcoming": false
+   }
+  ],
+  "description": "To travel from the Fitchburg platform to the North Station platform, travel to the east end of the platform and proceed down the ramp to the small parking lot. Continue east on Railroad St to Main St. At Main St, turn right and continue to Maple St. At Maple St, turn right and continue to the walkway that leads to the platform. To travel from the North Station platform to the Fitchburg platform, travel east on Maple St towards Main St. At Main St, turn left and continue to Railroad St. At Railroad St, turn left and continue to the station, where a ramp to the Fitchburg platform is located next the small parking lot.",
+  "header": "South Acton Elevator 704 (Track 1 (outbound platform) to pedestrian bridge) is unavailable.",
+  "id": "1033322",
+  "stops": [
+   "place-FR-0253",
+   "FR-0253-01",
+   "FR-0253-B"
+  ],
+  "type": "ELEVATOR_CLOSURE"
+ },
+ {
+  "active_period": [
+   {
+    "current": true,
+    "end": null,
+    "start": "2026-05-12T10:55:27-04:00",
+    "upcoming": false
+   }
+  ],
+  "description": null,
+  "header": "Alewife Escalator 351 (Main concourse to platform) is unavailable due to maintenance.",
+  "id": "1009804",
+  "stops": [
+   "place-alfcl",
+   "Alewife-01",
+   "Alewife-02"
+  ],
+  "type": "ESCALATOR_CLOSURE"
+ },
+ {
+  "active_period": [
+   {
+    "current": true,
+    "end": "2026-10-16T22:56:30-04:00",
+    "start": "2026-10-16T20:02:39-04:00",
+    "upcoming": false
+   }
+  ],
+  "header": "Route 87 is experiencing delays of about 20 minutes due to traffic.",
+  "id": "1039414",
+  "routes": [
+   "87"
+  ],
+  "stops": [],
+  "type": "DELAY"
+ },
+ {
+  "active_period": [
+   {
+    "current": true,
+    "end": null,
+    "start": "2026-07-29T19:16:01-04:00",
+    "upcoming": false
+   }
+  ],
+  "description": null,
+  "header": "Courthouse Escalator 418 (Lobby to Seaport Boulevard, Fan Pier Boulevard) is unavailable due to maintenance.",
+  "id": "1024904",
+  "stops": [
+   "place-crtst",
+   "door-crtst-north"
+  ],
+  "type": "ESCALATOR_CLOSURE"
+ },
+ {
+  "active_period": [
+   {
+    "current": false,
+    "end": "2026-10-20T03:00:00-04:00",
+    "start": "2026-10-19T03:00:00-04:00",
+    "upcoming": true
+   }
+  ],
+  "header": "Greenbush Line: On Mon, Oct 19 service will be suspended between South Station and Weymouth Landing/East Braintree. All Greenbush Line trains will terminate and originate at Braintree for Red Line service.",
+  "id": "1037126",
+  "stops": [
+   "place-qnctr",
+   "MM-0023-S",
+   "place-GRB-0118",
+   "place-jfk",
+   "GRB-0118-S"
+  ],
+  "type": "SUSPENSION"
+ },
+ {
+  "active_period": [
+   {
+    "current": true,
+    "end": null,
+    "start": "2026-07-20T03:00:00-04:00",
+    "upcoming": false
+   }
+  ],
+  "header": "American Legion Hwy @ Revere St is closed due to construction. For Routes 426 and 450, the closest stop with service is American Legion Hwy @ Hutchinson St. For Routes 424 and 455, the closest stop with service is Revere St @ Stowers St.",
+  "id": "1022175",
+  "stops": [],
+  "type": "STOP_CLOSURE"
+ },
+ {
+  "active_period": [
+   {
+    "current": true,
+    "end": null,
+    "start": "2026-05-05T06:41:00-04:00",
+    "upcoming": false
+   }
+  ],
+  "header": "Route 556 inbound is detoured, skipping Hammond St @ Plympton St due to maintenance. The closest stops with service are 184 Hammond St & Hammond St @ Lawrence St.",
+  "id": "1008495",
+  "routes": [
+   "556"
+  ],
+  "stops": [
+   77242
+  ],
+  "type": "DETOUR"
+ },
+ {
+  "active_period": [
+   {
+    "current": false,
+    "end": "2026-10-19T03:00:00-04:00",
+    "start": "2026-10-16T23:00:00-04:00",
+    "upcoming": true
+   }
+  ],
+  "header": "From 11 PM on Friday, October 16 through Sunday, October 18, Needham Line service will be suspended to accommodate West Roxbury Bridge work.",
+  "id": "1037121",
+  "stops": [],
+  "type": "SUSPENSION"
+ },
+ {
+  "active_period": [
+   {
+    "current": true,
+    "end": "2026-12-02T03:00:00-05:00",
+    "start": "2026-09-22T03:00:00-04:00",
+    "upcoming": true
+   }
+  ],
+  "description": "The elevator is closed for major equipment upgrades that will significantly improve the long-term reliability of this elevator.\r\n\r\nTo board a Red Line Train: Proceed to the Orange Line Oak Grove Platform at the opposite end of the concourse. Take elevator 998 or 999 to the Red Line passage, then follow signs to Alewife. \r\n  \r\nTo exit the station: Proceed to the north end of the platform to the Orange - Red Line passage. Take Elevator 998 or 999 to the Orange Line Oak Grove platform. Exit the station using the 101 Arch St Elevator on the Summer St concourse.\r\n",
+  "header": "Downtown Crossing Elevator 869 (Alewife platform to Summer Street Concourse) is unavailable due to maintenance through Tuesday, December 1.",
+  "id": "1031518",
+  "stops": [
+   "door-dwnxg-summer",
+   "door-dwnxg-macys",
+   "door-dwnxg-rochebros",
+   "door-dwnxg-101arch",
+   "place-dwnxg"
+  ],
+  "type": "ELEVATOR_CLOSURE"
+ }
+]

@@ -1,0 +1,805 @@
+{
+ "summaryData": {
+  "totalRidershipHistory": {
+   "2018-01-01": 296576,
+   "2018-01-08": 447250,
+   "2018-01-15": 458847,
+   "2018-01-22": 464611,
+   "2018-01-29": 463216
+  },
+  "totalServiceHistory": {
+   "2018-01-01": 7962,
+   "2018-01-08": 8022,
+   "2018-01-15": 8022,
+   "2018-01-22": 8022,
+   "2018-01-29": 8022
+  },
+  "totalRidershipPercentage": 0,
+  "totalServicePercentage": 0,
+  "totalPassengers": 355205,
+  "totalTrips": 8086,
+  "totalRoutesCancelled": 0,
+  "totalReducedService": 7,
+  "totalIncreasedService": 30,
+  "startDate": "2018-01-01",
+  "endDate": "2026-10-16"
+ },
+ "modeData": {
+  "rapid-transit": {
+   "totalRidershipHistory": {
+    "2018-01-01": 296576,
+    "2018-01-08": 447250,
+    "2018-01-15": 458847,
+    "2018-01-22": 464611,
+    "2018-01-29": 463216
+   },
+   "totalServiceHistory": {
+    "2018-01-01": 1753,
+    "2018-01-08": 1753,
+    "2018-01-15": 1753,
+    "2018-01-22": 1753,
+    "2018-01-29": 1753
+   },
+   "totalRidershipPercentage": 0,
+   "totalServicePercentage": 0,
+   "totalPassengers": 355205,
+   "totalTrips": 1852,
+   "totalRoutesCancelled": 0,
+   "totalReducedService": 0,
+   "totalIncreasedService": 3,
+   "startDate": "2018-01-01",
+   "endDate": "2026-10-16"
+  },
+  "regional-rail": {
+   "totalRidershipHistory": {
+    "2020-06-22": 5404,
+    "2020-06-29": 7057,
+    "2020-07-06": 9005,
+    "2020-07-13": 11158,
+    "2020-07-20": 11409
+   },
+   "totalServiceHistory": {
+    "2018-01-01": 185,
+    "2018-01-08": 245,
+    "2018-01-15": 245,
+    "2018-01-22": 245,
+    "2018-01-29": 245
+   },
+   "totalRidershipPercentage": 0,
+   "totalServicePercentage": 0,
+   "totalPassengers": 86828,
+   "totalTrips": 273,
+   "totalRoutesCancelled": 0,
+   "totalReducedService": 3,
+   "totalIncreasedService": 0,
+   "startDate": "2018-01-01",
+   "endDate": "2026-10-16"
+  },
+  "boat": {
+   "totalRidershipHistory": {
+    "2018-10-29": 11522,
+    "2018-11-05": 27607,
+    "2018-11-19": 16452,
+    "2018-11-26": 26789,
+    "2018-12-03": 25864
+   },
+   "totalServiceHistory": {
+    "2018-01-01": 0,
+    "2018-01-08": 0,
+    "2018-01-15": 0,
+    "2018-01-22": 0,
+    "2018-01-29": 0
+   },
+   "totalRidershipPercentage": 0,
+   "totalServicePercentage": 0,
+   "totalPassengers": 6687,
+   "totalTrips": 96,
+   "totalRoutesCancelled": 0,
+   "totalReducedService": 1,
+   "totalIncreasedService": 0,
+   "startDate": "2018-01-01",
+   "endDate": "2026-10-16"
+  },
+  "bus": {
+   "totalRidershipHistory": {
+    "2018-12-31": 326094,
+    "2019-01-07": 315141,
+    "2019-01-14": 317235,
+    "2019-01-21": 319742,
+    "2019-01-28": 313551
+   },
+   "totalServiceHistory": {
+    "2018-01-01": 6024,
+    "2018-01-08": 6024,
+    "2018-01-15": 6024,
+    "2018-01-22": 6024,
+    "2018-01-29": 6024
+   },
+   "totalRidershipPercentage": 0,
+   "totalServicePercentage": 0,
+   "totalPassengers": 325588,
+   "totalTrips": 5865,
+   "totalRoutesCancelled": 0,
+   "totalReducedService": 3,
+   "totalIncreasedService": 27,
+   "startDate": "2018-01-01",
+   "endDate": "2026-10-16"
+  }
+ },
+ "lineData": {
+  "line-Red": {
+   "id": "line-Red",
+   "shortName": "",
+   "longName": "Red Line",
+   "routeIds": [
+    "Red",
+    "Shuttle-Generic-Red",
+    "Shuttle-Generic-Red-Ashmont",
+    "Shuttle-Generic-Red-Braintree",
+    "Shuttle-Generic-Red-Trunk"
+   ],
+   "startDate": "2018-01-01",
+   "lineKind": "red",
+   "ridershipHistory": {
+    "2018-01-01": 122736,
+    "2018-01-08": 185912,
+    "2018-01-15": 185489,
+    "2018-01-22": 193488,
+    "2018-01-29": 192017
+   },
+   "serviceHistory": {
+    "2018-01-01": 220,
+    "2018-01-08": 220,
+    "2018-01-15": 220,
+    "2018-01-22": 220,
+    "2018-01-29": 220
+   },
+   "serviceRegimes": {
+    "current": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.5,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 241
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       6.5,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 193
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 181
+     }
+    },
+    "oneYearAgo": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 225
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.5,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 181
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 171
+     }
+    },
+    "baseline": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 223
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 171
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       6.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 149
+     }
+    }
+   }
+  },
+  "line-Orange": {
+   "id": "line-Orange",
+   "shortName": "",
+   "longName": "Orange Line",
+   "routeIds": [
+    "Orange",
+    "Shuttle-Generic-Orange",
+    "Shuttle-NorthStationOakGroveLocal",
+    "Shuttle-NorthStationOakGroveExpress",
+    "Shuttle-NorthStationWellingtonLocal"
+   ],
+   "startDate": "2018-01-01",
+   "lineKind": "orange",
+   "ridershipHistory": {
+    "2018-01-01": 97482,
+    "2018-01-08": 149128,
+    "2018-01-15": 155324,
+    "2018-01-22": 153558,
+    "2018-01-29": 154843
+   },
+   "serviceHistory": {
+    "2018-01-01": 153,
+    "2018-01-08": 153,
+    "2018-01-15": 153,
+    "2018-01-22": 153,
+    "2018-01-29": 153
+   },
+   "serviceRegimes": {
+    "current": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       7.5,
+       2.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 231
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.0,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 120
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       3.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 112
+     }
+    },
+    "oneYearAgo": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 211
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.0,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 160
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       6.0,
+       1.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 114
+     }
+    },
+    "baseline": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       3.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 158
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       3.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 117
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       3.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 98
+     }
+    }
+   }
+  },
+  "line-Green": {
+   "id": "line-Green",
+   "shortName": "",
+   "longName": "Green Line",
+   "routeIds": [
+    "Green-B",
+    "Green-C",
+    "Green-D",
+    "Green-E",
+    "Shuttle-Generic-Green"
+   ],
+   "startDate": "2018-01-01",
+   "lineKind": "green",
+   "ridershipHistory": {
+    "2018-01-01": 44188,
+    "2018-01-08": 64262,
+    "2018-01-15": 69753,
+    "2018-01-22": 68435,
+    "2018-01-29": 68085
+   },
+   "serviceHistory": {
+    "2018-01-01": 642,
+    "2018-01-08": 642,
+    "2018-01-15": 642,
+    "2018-01-22": 642,
+    "2018-01-29": 642
+   },
+   "serviceRegimes": {
+    "current": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       19.5,
+       6.5,
+       0.0,
+       0.0,
+       3.0
+      ],
+      "totalTrips": 580
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       15.5,
+       6.0,
+       0.0,
+       0.0,
+       0.5
+      ],
+      "totalTrips": 467
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       12.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 424
+     }
+    },
+    "oneYearAgo": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       16.5,
+       0.0,
+       0.0,
+       0.0,
+       3.0
+      ],
+      "totalTrips": 574
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       15.0,
+       6.0,
+       0.0,
+       0.0,
+       0.5
+      ],
+      "totalTrips": 468
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       11.5,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 426
+     }
+    },
+    "baseline": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       13.0,
+       0.0,
+       0.0,
+       0.0,
+       1.0
+      ],
+      "totalTrips": 638
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       17.5,
+       1.5,
+       0.0,
+       0.0,
+       1.5
+      ],
+      "totalTrips": 632
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       15.5,
+       1.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 524
+     }
+    }
+   }
+  },
+  "line-Blue": {
+   "id": "line-Blue",
+   "shortName": "",
+   "longName": "Blue Line",
+   "routeIds": [
+    "Blue",
+    "Shuttle-Generic-Blue",
+    "Shuttle-GovernmentCenterOrientHeightsExpress",
+    "Shuttle-AirportWonderland",
+    "Shuttle-GovernmentCenterOrientHeightsLocal"
+   ],
+   "startDate": "2018-01-01",
+   "lineKind": "blue",
+   "ridershipHistory": {
+    "2018-01-01": 32170,
+    "2018-01-08": 47948,
+    "2018-01-15": 48281,
+    "2018-01-22": 49130,
+    "2018-01-29": 48271
+   },
+   "serviceHistory": {
+    "2018-01-01": 186,
+    "2018-01-08": 186,
+    "2018-01-15": 186,
+    "2018-01-22": 186,
+    "2018-01-29": 186
+   },
+   "serviceRegimes": {
+    "current": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.0,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 219
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.0,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 154
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 145
+     }
+    },
+    "oneYearAgo": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       3.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 208
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       5.0,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 154
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 145
+     }
+    },
+    "baseline": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       4.0,
+       0.5,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 180
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       3.5,
+       0.5,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 126
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       3.5,
+       0.5,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 114
+     }
+    }
+   }
+  },
+  "line-SLWaterfront": {
+   "id": "line-SLWaterfront",
+   "shortName": "",
+   "longName": "Silver Line SL1/SL2/SL3",
+   "routeIds": [
+    "741",
+    "742",
+    "743",
+    "746"
+   ],
+   "startDate": "2018-01-01",
+   "lineKind": "silver",
+   "ridershipHistory": {
+    "2018-12-31": 22850,
+    "2019-01-07": 20119,
+    "2019-01-14": 20433,
+    "2019-01-21": 21198,
+    "2019-01-28": 19940
+   },
+   "serviceHistory": {
+    "2018-01-01": 338,
+    "2018-01-08": 338,
+    "2018-01-15": 338,
+    "2018-01-22": 338,
+    "2018-01-29": 338
+   },
+   "serviceRegimes": {
+    "current": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       12.5,
+       4.5,
+       0.5,
+       0.0,
+       5.0
+      ],
+      "totalTrips": 400
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       11.5,
+       6.5,
+       1.0,
+       0.0,
+       1.0
+      ],
+      "totalTrips": 324
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       17.5,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 316
+     }
+    },
+    "oneYearAgo": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       9.5,
+       1.5,
+       0.0,
+       0.0,
+       5.0
+      ],
+      "totalTrips": 380
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       12.5,
+       6.0,
+       1.0,
+       0.0,
+       1.0
+      ],
+      "totalTrips": 326
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       16.0,
+       3.5,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 325
+     }
+    },
+    "baseline": {
+     "weekday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       11.5,
+       3.0,
+       0.0,
+       0.0,
+       4.0
+      ],
+      "totalTrips": 435
+     },
+     "saturday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       13.0,
+       2.0,
+       0.0,
+       0.0,
+       1.5
+      ],
+      "totalTrips": 336
+     },
+     "sunday": {
+      "cancelled": false,
+      "tripsPerHour": [
+       15.5,
+       3.0,
+       0.0,
+       0.0,
+       0.0
+      ],
+      "totalTrips": 328
+     }
+    }
+   }
+  }
+ }
+}
