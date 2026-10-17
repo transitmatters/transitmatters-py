@@ -18,8 +18,9 @@ from transitmatters import (
     TransitMatters,
 )
 from transitmatters import _endpoints as endpoints
+from transitmatters._convert import EASTERN
 from transitmatters._generated.api import api as generated_api
-from transitmatters.models import HeadwayEvent, HealthcheckResponse
+from transitmatters.models import Headway, Healthcheck
 
 HEADWAY = {
     "route_id": "Red",
@@ -28,6 +29,15 @@ HEADWAY = {
     "headway_time_sec": 300.0,
     "vehicle_label": "1850",
 }
+PARSED_HEADWAY = Headway(
+    route_id="Red",
+    direction=0,
+    current_dep_dt=datetime.datetime(2024, 3, 1, 8, tzinfo=EASTERN),
+    headway_time_sec=300.0,
+    benchmark_headway_time_sec=None,
+    vehicle_label="1850",
+    vehicle_consist=(),
+)
 
 
 def mock_transport(
@@ -55,7 +65,7 @@ def mock_client(
 def test_returns_parsed_models_from_production():
     tm, requests = mock_client(json=[HEADWAY])
 
-    assert tm.headways("2024-03-01", stop="70061") == [HeadwayEvent.from_dict(HEADWAY)]
+    assert tm.headways("2024-03-01", stop="70061") == [PARSED_HEADWAY]
     assert (
         str(requests[0].url) == f"{DEFAULT_BASE_URL}/api/headways/2024-03-01?stop=70061"
     )
@@ -151,8 +161,8 @@ def test_failing_healthcheck_is_returned_not_raised():
 
     result = tm.healthcheck()
 
-    assert isinstance(result, HealthcheckResponse)
-    assert result.status == "fail"
+    assert isinstance(result, Healthcheck)
+    assert not result.ok
 
 
 def test_context_manager_closes_connection_pool():
@@ -167,13 +177,13 @@ def test_context_manager_closes_connection_pool():
 def test_async_client():
     transport, requests = mock_transport(json=[HEADWAY])
 
-    async def run() -> tuple[list[HeadwayEvent], AsyncTransitMatters]:
+    async def run() -> tuple[list[Headway], AsyncTransitMatters]:
         async with AsyncTransitMatters(httpx_args={"transport": transport}) as tm:
             return await tm.headways("2024-03-01", stop=["70061", "70063"]), tm
 
     events, tm = asyncio.run(run())
 
-    assert events == [HeadwayEvent.from_dict(HEADWAY)]
+    assert events == [PARSED_HEADWAY]
     assert requests[0].url.path == "/api/headways/2024-03-01"
     assert requests[0].url.params.get_list("stop") == ["70061", "70063"]
     assert tm.raw_client.get_async_httpx_client().is_closed

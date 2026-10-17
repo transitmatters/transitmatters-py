@@ -14,6 +14,9 @@ from functools import partial
 from http import HTTPStatus
 from typing import Any, Literal
 
+from . import _convert as convert
+from . import models as m
+from ._convert import each
 from ._generated.api.api import (
     get_aggregate_dwells,
     get_aggregate_headways,
@@ -39,30 +42,10 @@ from ._generated.api.api import (
 )
 from ._generated.client import Client
 from ._generated.models import (
-    AggregateByDate,
-    Alert,
-    DwellEvent,
-    FacilitiesResponse,
     GetLineDelaysAgg,
     GetScheduledServiceAgg,
-    GetScheduledServiceResponse,
     GetServiceHoursAgg,
     GetTripMetricsAgg,
-    HeadwayAggregateByDate,
-    HeadwayEvent,
-    HealthcheckResponse,
-    LineDelayEntry,
-    LiveAlert,
-    RidershipEntry,
-    RoutesResponse,
-    ServiceHoursEntry,
-    ServiceRidershipDashboardResponse,
-    SpeedRestrictionsResponse,
-    StopsResponse,
-    TimePredictionWeek,
-    TravelTimeAggregate2Response,
-    TravelTimeEvent,
-    TripMetricsEntry,
 )
 from ._generated.types import UNSET, Response, Unset
 
@@ -103,10 +86,6 @@ def _call[**P, T](
     )
 
 
-def _same(parsed: Any) -> Any:
-    return parsed
-
-
 def to_date(value: DateLike) -> datetime.date:
     # datetime subclasses date, but its str() includes the time, which the API rejects.
     if isinstance(value, datetime.datetime):
@@ -124,11 +103,11 @@ def _to_list(values: OneOrMany | None) -> list[str] | Unset:
     return list(values)
 
 
-def healthcheck(client: Client) -> Call[HealthcheckResponse]:
+def healthcheck(client: Client) -> Call[m.Healthcheck]:
     call = _call(
         get_healthcheck.sync_detailed,
         get_healthcheck.asyncio_detailed,
-        _same,
+        convert.healthcheck,
         client=client,
     )
     return replace(call, ok=_HEALTHCHECK_OK)
@@ -136,11 +115,11 @@ def healthcheck(client: Client) -> Call[HealthcheckResponse]:
 
 def headways(
     client: Client, date: DateLike, *, stop: OneOrMany | None
-) -> Call[list[HeadwayEvent]]:
+) -> Call[list[m.Headway]]:
     return _call(
         get_headways.sync_detailed,
         get_headways.asyncio_detailed,
-        _same,
+        each(convert.headway),
         to_date(date),
         client=client,
         stop=_to_list(stop),
@@ -149,11 +128,11 @@ def headways(
 
 def dwells(
     client: Client, date: DateLike, *, stop: OneOrMany | None
-) -> Call[list[DwellEvent]]:
+) -> Call[list[m.Dwell]]:
     return _call(
         get_dwells.sync_detailed,
         get_dwells.asyncio_detailed,
-        _same,
+        each(convert.dwell),
         to_date(date),
         client=client,
         stop=_to_list(stop),
@@ -166,11 +145,11 @@ def travel_times(
     *,
     from_stop: OneOrMany | None,
     to_stop: OneOrMany | None,
-) -> Call[list[TravelTimeEvent]]:
+) -> Call[list[m.TravelTime]]:
     return _call(
         get_travel_times.sync_detailed,
         get_travel_times.asyncio_detailed,
-        _same,
+        each(convert.travel_time),
         to_date(date),
         client=client,
         from_stop=_to_list(from_stop),
@@ -180,11 +159,11 @@ def travel_times(
 
 def historical_alerts(
     client: Client, date: DateLike, *, route: OneOrMany | None
-) -> Call[list[Alert]]:
+) -> Call[list[m.Alert]]:
     return _call(
         get_historical_alerts.sync_detailed,
         get_historical_alerts.asyncio_detailed,
-        _same,
+        each(convert.alert),
         to_date(date),
         client=client,
         route=_to_list(route),
@@ -198,11 +177,11 @@ def aggregate_travel_times(
     *,
     from_stop: OneOrMany | None,
     to_stop: OneOrMany | None,
-) -> Call[list[AggregateByDate]]:
+) -> Call[list[m.DailyStats]]:
     return _call(
         get_aggregate_travel_times.sync_detailed,
         get_aggregate_travel_times.asyncio_detailed,
-        _same,
+        each(convert.daily_stats),
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -218,11 +197,11 @@ def aggregate_travel_times_v2(
     *,
     from_stop: OneOrMany | None,
     to_stop: OneOrMany | None,
-) -> Call[TravelTimeAggregate2Response]:
+) -> Call[m.TravelTimeStats]:
     return _call(
         get_aggregate_travel_times_v2.sync_detailed,
         get_aggregate_travel_times_v2.asyncio_detailed,
-        _same,
+        convert.travel_time_stats,
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -237,11 +216,11 @@ def aggregate_headways(
     end_date: DateLike,
     *,
     stop: OneOrMany | None,
-) -> Call[list[HeadwayAggregateByDate]]:
+) -> Call[list[m.DailyHeadwayStats]]:
     return _call(
         get_aggregate_headways.sync_detailed,
         get_aggregate_headways.asyncio_detailed,
-        _same,
+        each(convert.daily_headway_stats),
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -255,11 +234,11 @@ def aggregate_dwells(
     end_date: DateLike,
     *,
     stop: OneOrMany | None,
-) -> Call[list[AggregateByDate]]:
+) -> Call[list[m.DailyStats]]:
     return _call(
         get_aggregate_dwells.sync_detailed,
         get_aggregate_dwells.asyncio_detailed,
-        _same,
+        each(convert.daily_stats),
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -267,11 +246,11 @@ def aggregate_dwells(
     )
 
 
-def current_alerts(client: Client) -> Call[list[LiveAlert]]:
+def current_alerts(client: Client) -> Call[list[m.LiveAlert]]:
     return _call(
         get_current_alerts.sync_detailed,
         get_current_alerts.asyncio_detailed,
-        _same,
+        each(convert.live_alert),
         client=client,
     )
 
@@ -283,11 +262,11 @@ def line_delays(
     *,
     line: str,
     agg: Literal["daily", "weekly"],
-) -> Call[list[LineDelayEntry]]:
+) -> Call[list[m.LineDelays]]:
     return _call(
         get_line_delays.sync_detailed,
         get_line_delays.asyncio_detailed,
-        _same,
+        each(convert.line_delays),
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -303,11 +282,11 @@ def trip_metrics(
     *,
     line: str,
     agg: Agg,
-) -> Call[list[TripMetricsEntry]]:
+) -> Call[list[m.TripMetrics]]:
     return _call(
         get_trip_metrics.sync_detailed,
         get_trip_metrics.asyncio_detailed,
-        _same,
+        each(convert.trip_metrics),
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -323,11 +302,11 @@ def scheduled_service(
     *,
     route_id: str,
     agg: Agg,
-) -> Call[GetScheduledServiceResponse]:
+) -> Call[m.ScheduledService]:
     return _call(
         get_scheduled_service.sync_detailed,
         get_scheduled_service.asyncio_detailed,
-        _same,
+        convert.scheduled_service,
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -338,11 +317,11 @@ def scheduled_service(
 
 def ridership(
     client: Client, start_date: DateLike, end_date: DateLike, *, line_id: str
-) -> Call[list[RidershipEntry]]:
+) -> Call[list[m.Ridership]]:
     return _call(
         get_ridership.sync_detailed,
         get_ridership.asyncio_detailed,
-        _same,
+        each(convert.ridership),
         client=client,
         start_date=to_date(start_date),
         end_date=to_date(end_date),
@@ -350,22 +329,22 @@ def ridership(
     )
 
 
-def facilities(client: Client) -> Call[FacilitiesResponse]:
+def facilities(client: Client) -> Call[list[m.Facility]]:
     return _call(
         get_facilities.sync_detailed,
         get_facilities.asyncio_detailed,
-        _same,
+        convert.facilities,
         client=client,
     )
 
 
 def speed_restrictions(
     client: Client, date: DateLike, *, line_id: str
-) -> Call[SpeedRestrictionsResponse]:
+) -> Call[m.SpeedRestrictions]:
     return _call(
         get_speed_restrictions.sync_detailed,
         get_speed_restrictions.asyncio_detailed,
-        _same,
+        convert.speed_restrictions,
         client=client,
         line_id=line_id,
         date=to_date(date),
@@ -379,11 +358,11 @@ def service_hours(
     *,
     line_id: str,
     agg: Agg,
-) -> Call[list[ServiceHoursEntry]]:
+) -> Call[list[m.ServiceHours]]:
     return _call(
         get_service_hours.sync_detailed,
         get_service_hours.asyncio_detailed,
-        _same,
+        each(convert.service_hours),
         client=client,
         line_id=line_id,
         start_date=to_date(start_date),
@@ -392,11 +371,11 @@ def service_hours(
     )
 
 
-def time_predictions(client: Client, route_id: str) -> Call[list[TimePredictionWeek]]:
+def time_predictions(client: Client, route_id: str) -> Call[list[m.TimePredictionWeek]]:
     return _call(
         get_time_predictions.sync_detailed,
         get_time_predictions.asyncio_detailed,
-        _same,
+        each(convert.time_prediction_week),
         client=client,
         route_id=route_id,
     )
@@ -404,29 +383,29 @@ def time_predictions(client: Client, route_id: str) -> Call[list[TimePredictionW
 
 def service_ridership_dashboard(
     client: Client,
-) -> Call[ServiceRidershipDashboardResponse]:
+) -> Call[m.ServiceRidershipDashboard]:
     return _call(
         get_service_ridership_dashboard.sync_detailed,
         get_service_ridership_dashboard.asyncio_detailed,
-        _same,
+        convert.service_ridership_dashboard,
         client=client,
     )
 
 
-def routes(client: Client) -> Call[RoutesResponse]:
+def routes(client: Client) -> Call[m.Routes]:
     return _call(
         get_routes.sync_detailed,
         get_routes.asyncio_detailed,
-        _same,
+        convert.routes,
         client=client,
     )
 
 
-def stops(client: Client, route_id: str) -> Call[StopsResponse]:
+def stops(client: Client, route_id: str) -> Call[m.RouteStops]:
     return _call(
         get_stops_for_route.sync_detailed,
         get_stops_for_route.asyncio_detailed,
-        _same,
+        convert.route_stops,
         route_id,
         client=client,
     )

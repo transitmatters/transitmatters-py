@@ -30,30 +30,7 @@ import httpx
 from . import _endpoints as ep
 from ._endpoints import Agg, Call, DateLike, OneOrMany
 from ._generated.client import Client
-from ._generated.models import (
-    AggregateByDate,
-    Alert,
-    DwellEvent,
-    ErrorResponse,
-    FacilitiesResponse,
-    GetScheduledServiceResponse,
-    HeadwayAggregateByDate,
-    HeadwayEvent,
-    HealthcheckResponse,
-    LineDelayEntry,
-    LiveAlert,
-    RidershipEntry,
-    RouteNotFoundResponse,
-    RoutesResponse,
-    ServiceHoursEntry,
-    ServiceRidershipDashboardResponse,
-    SpeedRestrictionsResponse,
-    StopsResponse,
-    TimePredictionWeek,
-    TravelTimeAggregate2Response,
-    TravelTimeEvent,
-    TripMetricsEntry,
-)
+from ._generated.models import ErrorResponse, RouteNotFoundResponse
 from ._generated.types import Response
 from .errors import (
     APIError,
@@ -62,6 +39,28 @@ from .errors import (
     NotFoundError,
     RangeTooLongError,
     ServerError,
+)
+from .models import (
+    Alert,
+    DailyHeadwayStats,
+    DailyStats,
+    Dwell,
+    Facility,
+    Headway,
+    Healthcheck,
+    LineDelays,
+    LiveAlert,
+    Ridership,
+    Routes,
+    RouteStops,
+    ScheduledService,
+    ServiceHours,
+    ServiceRidershipDashboard,
+    SpeedRestrictions,
+    TimePredictionWeek,
+    TravelTime,
+    TravelTimeStats,
+    TripMetrics,
 )
 
 DEFAULT_BASE_URL = "https://dashboard-api.labs.transitmatters.org"
@@ -258,16 +257,16 @@ class TransitMatters(_BaseClient):
             _sleep(delay)
         raise AssertionError("unreachable")
 
-    def healthcheck(self) -> HealthcheckResponse:
+    def healthcheck(self) -> Healthcheck:
         """Run the API's health checks.
 
-        Failing checks come back as `status == "fail"` rather than raising.
+        Failing checks come back with `ok` false rather than raising.
         """
         return self._run(ep.healthcheck(self._client))
 
     def headways(
         self, date: DateLike, *, stop: OneOrMany | None = None
-    ) -> list[HeadwayEvent]:
+    ) -> list[Headway]:
         """Time between consecutive departures from `stop` on `date`.
 
         Returns one event per departure. `stop` is one or more MBTA stop IDs,
@@ -275,9 +274,7 @@ class TransitMatters(_BaseClient):
         """
         return self._run(ep.headways(self._client, date, stop=stop))
 
-    def dwells(
-        self, date: DateLike, *, stop: OneOrMany | None = None
-    ) -> list[DwellEvent]:
+    def dwells(self, date: DateLike, *, stop: OneOrMany | None = None) -> list[Dwell]:
         """Time vehicles spent stopped at `stop` on `date`.
 
         Returns one event per stop a vehicle made. `stop` is one or more MBTA
@@ -291,7 +288,7 @@ class TransitMatters(_BaseClient):
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
-    ) -> list[TravelTimeEvent]:
+    ) -> list[TravelTime]:
         """Travel time of each trip from `from_stop` to `to_stop` on `date`.
 
         Returns one event per trip. Both are one or more MBTA stop IDs, e.g.
@@ -317,7 +314,7 @@ class TransitMatters(_BaseClient):
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
-    ) -> list[AggregateByDate]:
+    ) -> list[DailyStats]:
         """Daily travel-time statistics between stops over an inclusive date range.
 
         Returns one entry per service date and peak period. Stop IDs work as
@@ -336,7 +333,7 @@ class TransitMatters(_BaseClient):
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
-    ) -> TravelTimeAggregate2Response:
+    ) -> TravelTimeStats:
         """Travel-time statistics between stops, by date and by time of day.
 
         `by_date` matches `aggregate_travel_times`; `by_time` groups trips into
@@ -354,7 +351,7 @@ class TransitMatters(_BaseClient):
         end_date: DateLike,
         *,
         stop: OneOrMany | None = None,
-    ) -> list[HeadwayAggregateByDate]:
+    ) -> list[DailyHeadwayStats]:
         """Daily headway statistics for `stop` over an inclusive date range.
 
         Returns one entry per service date, with bunching and on-time counts.
@@ -369,7 +366,7 @@ class TransitMatters(_BaseClient):
         end_date: DateLike,
         *,
         stop: OneOrMany | None = None,
-    ) -> list[AggregateByDate]:
+    ) -> list[DailyStats]:
         """Daily dwell-time statistics for `stop` over an inclusive date range.
 
         Returns one entry per service date and peak period.
@@ -389,7 +386,7 @@ class TransitMatters(_BaseClient):
         *,
         line: str,
         agg: Literal["daily", "weekly"] = "weekly",
-    ) -> list[LineDelayEntry]:
+    ) -> list[LineDelays]:
         """Alert-attributed delays on `line` over an inclusive date range.
 
         Returns one entry per day or week, with minutes of delay by cause.
@@ -406,7 +403,7 @@ class TransitMatters(_BaseClient):
         *,
         line: str,
         agg: Agg,
-    ) -> list[TripMetricsEntry]:
+    ) -> list[TripMetrics]:
         """Speed and travel-time metrics for `line` over an inclusive date range.
 
         Returns one entry per day, week, or month. `line` is a rapid transit
@@ -423,7 +420,7 @@ class TransitMatters(_BaseClient):
         *,
         route_id: str,
         agg: Agg,
-    ) -> GetScheduledServiceResponse:
+    ) -> ScheduledService:
         """Scheduled trip counts for a route over an inclusive date range.
 
         `counts` has one entry per day, week, or month. `route_id` is an MBTA
@@ -441,7 +438,7 @@ class TransitMatters(_BaseClient):
         end_date: DateLike,
         *,
         line_id: str,
-    ) -> list[RidershipEntry]:
+    ) -> list[Ridership]:
         """Ridership on a line over an inclusive date range.
 
         Returns one entry per week. `line_id` is e.g. `"line-Red"`,
@@ -451,13 +448,11 @@ class TransitMatters(_BaseClient):
             ep.ridership(self._client, start_date, end_date, line_id=line_id)
         )
 
-    def facilities(self) -> FacilitiesResponse:
+    def facilities(self) -> list[Facility]:
         """Elevators and escalators, live from the MBTA."""
         return self._run(ep.facilities(self._client))
 
-    def speed_restrictions(
-        self, date: DateLike, *, line_id: str
-    ) -> SpeedRestrictionsResponse:
+    def speed_restrictions(self, date: DateLike, *, line_id: str) -> SpeedRestrictions:
         """Speed restrictions in effect on a rapid transit line on `date`.
 
         `line_id` is case-sensitive, e.g. `"line-Red"`.
@@ -471,7 +466,7 @@ class TransitMatters(_BaseClient):
         *,
         line_id: str,
         agg: Agg,
-    ) -> list[ServiceHoursEntry]:
+    ) -> list[ServiceHours]:
         """Scheduled and delivered service hours on a line over a date range.
 
         Returns one entry per day, week, or month. `line_id` is a rapid
@@ -487,15 +482,15 @@ class TransitMatters(_BaseClient):
         """Weekly arrival-prediction accuracy for a route, e.g. `"Red"`."""
         return self._run(ep.time_predictions(self._client, route_id))
 
-    def service_ridership_dashboard(self) -> ServiceRidershipDashboardResponse:
+    def service_ridership_dashboard(self) -> ServiceRidershipDashboard:
         """Combined service and ridership data behind the overview dashboard."""
         return self._run(ep.service_ridership_dashboard(self._client))
 
-    def routes(self) -> RoutesResponse:
+    def routes(self) -> Routes:
         """All route IDs the dashboard supports, grouped by mode."""
         return self._run(ep.routes(self._client))
 
-    def stops(self, route_id: str) -> StopsResponse:
+    def stops(self, route_id: str) -> RouteStops:
         """Stations and stop IDs along a route, e.g. `"Red"`."""
         return self._run(ep.stops(self._client, route_id))
 
@@ -529,22 +524,22 @@ class AsyncTransitMatters(_BaseClient):
             await _asleep(delay)
         raise AssertionError("unreachable")
 
-    async def healthcheck(self) -> HealthcheckResponse:
+    async def healthcheck(self) -> Healthcheck:
         """Run the API's health checks.
 
-        Failing checks come back as `status == "fail"` rather than raising.
+        Failing checks come back with `ok` false rather than raising.
         """
         return await self._run(ep.healthcheck(self._client))
 
     async def headways(
         self, date: DateLike, *, stop: OneOrMany | None = None
-    ) -> list[HeadwayEvent]:
+    ) -> list[Headway]:
         """Time between consecutive departures from `stop` on `date`."""
         return await self._run(ep.headways(self._client, date, stop=stop))
 
     async def dwells(
         self, date: DateLike, *, stop: OneOrMany | None = None
-    ) -> list[DwellEvent]:
+    ) -> list[Dwell]:
         """Time vehicles spent stopped at `stop` on `date`."""
         return await self._run(ep.dwells(self._client, date, stop=stop))
 
@@ -554,7 +549,7 @@ class AsyncTransitMatters(_BaseClient):
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
-    ) -> list[TravelTimeEvent]:
+    ) -> list[TravelTime]:
         """Travel time of each trip from `from_stop` to `to_stop` on `date`."""
         return await self._run(
             ep.travel_times(self._client, date, from_stop=from_stop, to_stop=to_stop)
@@ -573,7 +568,7 @@ class AsyncTransitMatters(_BaseClient):
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
-    ) -> list[AggregateByDate]:
+    ) -> list[DailyStats]:
         """Daily travel-time statistics between stops over an inclusive date range."""
         return await self._run(
             ep.aggregate_travel_times(
@@ -588,7 +583,7 @@ class AsyncTransitMatters(_BaseClient):
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
-    ) -> TravelTimeAggregate2Response:
+    ) -> TravelTimeStats:
         """Travel-time statistics between stops, by date and by time of day."""
         return await self._run(
             ep.aggregate_travel_times_v2(
@@ -602,7 +597,7 @@ class AsyncTransitMatters(_BaseClient):
         end_date: DateLike,
         *,
         stop: OneOrMany | None = None,
-    ) -> list[HeadwayAggregateByDate]:
+    ) -> list[DailyHeadwayStats]:
         """Daily headway statistics for `stop` over an inclusive date range."""
         return await self._run(
             ep.aggregate_headways(self._client, start_date, end_date, stop=stop)
@@ -614,7 +609,7 @@ class AsyncTransitMatters(_BaseClient):
         end_date: DateLike,
         *,
         stop: OneOrMany | None = None,
-    ) -> list[AggregateByDate]:
+    ) -> list[DailyStats]:
         """Daily dwell-time statistics for `stop` over an inclusive date range."""
         return await self._run(
             ep.aggregate_dwells(self._client, start_date, end_date, stop=stop)
@@ -631,7 +626,7 @@ class AsyncTransitMatters(_BaseClient):
         *,
         line: str,
         agg: Literal["daily", "weekly"] = "weekly",
-    ) -> list[LineDelayEntry]:
+    ) -> list[LineDelays]:
         """Alert-attributed delays on `line` over an inclusive date range."""
         return await self._run(
             ep.line_delays(self._client, start_date, end_date, line=line, agg=agg)
@@ -644,7 +639,7 @@ class AsyncTransitMatters(_BaseClient):
         *,
         line: str,
         agg: Agg,
-    ) -> list[TripMetricsEntry]:
+    ) -> list[TripMetrics]:
         """Speed and travel-time metrics for `line` over an inclusive date range."""
         return await self._run(
             ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
@@ -657,7 +652,7 @@ class AsyncTransitMatters(_BaseClient):
         *,
         route_id: str,
         agg: Agg,
-    ) -> GetScheduledServiceResponse:
+    ) -> ScheduledService:
         """Scheduled trip counts for a route over an inclusive date range."""
         return await self._run(
             ep.scheduled_service(
@@ -671,19 +666,19 @@ class AsyncTransitMatters(_BaseClient):
         end_date: DateLike,
         *,
         line_id: str,
-    ) -> list[RidershipEntry]:
+    ) -> list[Ridership]:
         """Ridership on a line over an inclusive date range."""
         return await self._run(
             ep.ridership(self._client, start_date, end_date, line_id=line_id)
         )
 
-    async def facilities(self) -> FacilitiesResponse:
+    async def facilities(self) -> list[Facility]:
         """Elevators and escalators, live from the MBTA."""
         return await self._run(ep.facilities(self._client))
 
     async def speed_restrictions(
         self, date: DateLike, *, line_id: str
-    ) -> SpeedRestrictionsResponse:
+    ) -> SpeedRestrictions:
         """Speed restrictions in effect on a rapid transit line on `date`."""
         return await self._run(
             ep.speed_restrictions(self._client, date, line_id=line_id)
@@ -696,7 +691,7 @@ class AsyncTransitMatters(_BaseClient):
         *,
         line_id: str,
         agg: Agg,
-    ) -> list[ServiceHoursEntry]:
+    ) -> list[ServiceHours]:
         """Scheduled and delivered service hours on a line over a date range."""
         return await self._run(
             ep.service_hours(
@@ -708,14 +703,14 @@ class AsyncTransitMatters(_BaseClient):
         """Weekly arrival-prediction accuracy for a route."""
         return await self._run(ep.time_predictions(self._client, route_id))
 
-    async def service_ridership_dashboard(self) -> ServiceRidershipDashboardResponse:
+    async def service_ridership_dashboard(self) -> ServiceRidershipDashboard:
         """Combined service and ridership data behind the overview dashboard."""
         return await self._run(ep.service_ridership_dashboard(self._client))
 
-    async def routes(self) -> RoutesResponse:
+    async def routes(self) -> Routes:
         """All route IDs the dashboard supports, grouped by mode."""
         return await self._run(ep.routes(self._client))
 
-    async def stops(self, route_id: str) -> StopsResponse:
+    async def stops(self, route_id: str) -> RouteStops:
         """Stations and stop IDs along a route."""
         return await self._run(ep.stops(self._client, route_id))
