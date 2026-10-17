@@ -15,7 +15,7 @@ from http import HTTPStatus
 from typing import Any, Literal
 
 from . import _convert as convert
-from . import lines
+from . import _ranges, lines
 from . import models as m
 from ._convert import each
 from ._generated.api.api import (
@@ -115,61 +115,104 @@ def healthcheck(client: Client) -> Call[m.Healthcheck]:
     return replace(call, ok=_HEALTHCHECK_OK)
 
 
+def _each_day(date: DateLike, end_date: DateLike | None) -> list[datetime.date]:
+    first = to_date(date)
+    return _ranges.days(first, first if end_date is None else to_date(end_date))
+
+
+# The per-day endpoints below return one call per day from `date` through
+# `end_date`, or just `date` when `end_date` is None.
+
+
 def headways(
-    client: Client, date: DateLike, *, stop: OneOrMany | None
-) -> Call[list[m.Headway]]:
-    return _call(
-        get_headways.sync_detailed,
-        get_headways.asyncio_detailed,
-        each(convert.headway),
-        to_date(date),
-        client=client,
-        stop=_to_list(stop),
-    )
+    client: Client,
+    date: DateLike,
+    end_date: DateLike | None,
+    *,
+    stop: OneOrMany | None,
+) -> list[Call[list[m.Headway]]]:
+    stops = _to_list(stop)
+    return [
+        _call(
+            get_headways.sync_detailed,
+            get_headways.asyncio_detailed,
+            each(convert.headway),
+            day,
+            client=client,
+            stop=stops,
+        )
+        for day in _each_day(date, end_date)
+    ]
 
 
 def dwells(
-    client: Client, date: DateLike, *, stop: OneOrMany | None
-) -> Call[list[m.Dwell]]:
-    return _call(
-        get_dwells.sync_detailed,
-        get_dwells.asyncio_detailed,
-        each(convert.dwell),
-        to_date(date),
-        client=client,
-        stop=_to_list(stop),
-    )
+    client: Client,
+    date: DateLike,
+    end_date: DateLike | None,
+    *,
+    stop: OneOrMany | None,
+) -> list[Call[list[m.Dwell]]]:
+    stops = _to_list(stop)
+    return [
+        _call(
+            get_dwells.sync_detailed,
+            get_dwells.asyncio_detailed,
+            each(convert.dwell),
+            day,
+            client=client,
+            stop=stops,
+        )
+        for day in _each_day(date, end_date)
+    ]
 
 
 def travel_times(
     client: Client,
     date: DateLike,
+    end_date: DateLike | None,
     *,
     from_stop: OneOrMany | None,
     to_stop: OneOrMany | None,
-) -> Call[list[m.TravelTime]]:
-    return _call(
-        get_travel_times.sync_detailed,
-        get_travel_times.asyncio_detailed,
-        each(convert.travel_time),
-        to_date(date),
-        client=client,
-        from_stop=_to_list(from_stop),
-        to_stop=_to_list(to_stop),
-    )
+) -> list[Call[list[m.TravelTime]]]:
+    from_stops, to_stops = _to_list(from_stop), _to_list(to_stop)
+    return [
+        _call(
+            get_travel_times.sync_detailed,
+            get_travel_times.asyncio_detailed,
+            each(convert.travel_time),
+            day,
+            client=client,
+            from_stop=from_stops,
+            to_stop=to_stops,
+        )
+        for day in _each_day(date, end_date)
+    ]
 
 
 def historical_alerts(
-    client: Client, date: DateLike, *, route: RouteLike | Sequence[RouteLike] | None
-) -> Call[list[m.Alert]]:
-    return _call(
-        get_historical_alerts.sync_detailed,
-        get_historical_alerts.asyncio_detailed,
-        each(convert.alert),
-        to_date(date),
-        client=client,
-        route=_to_list(lines.route_ids(route)),
-    )
+    client: Client,
+    date: DateLike,
+    end_date: DateLike | None,
+    *,
+    route: RouteLike | Sequence[RouteLike] | None,
+) -> list[Call[list[m.Alert]]]:
+    routes = _to_list(lines.route_ids(route))
+    return [
+        _call(
+            get_historical_alerts.sync_detailed,
+            get_historical_alerts.asyncio_detailed,
+            each(convert.alert),
+            day,
+            client=client,
+            route=routes,
+        )
+        for day in _each_day(date, end_date)
+    ]
+
+
+def unique_alerts(alerts: list[m.Alert]) -> list[m.Alert]:
+    # An alert active on several days is returned for each of them.
+    return _ranges.unique(alerts, key=lambda a: (a.valid_from, a.valid_to, a.text))
 
 
 def aggregate_travel_times(
@@ -277,6 +320,14 @@ def line_delays(
     )
 
 
+# Trip metrics refuses ranges of more than 150 entries (upstream speed.py).
+_TRIP_METRICS_MAX_DAYS = {
+    GetTripMetricsAgg.DAILY: 150,
+    GetTripMetricsAgg.WEEKLY: 7 * 150,
+    GetTripMetricsAgg.MONTHLY: 30 * 150,
+}
+
+
 def trip_metrics(
     client: Client,
     start_date: DateLike,
@@ -284,17 +335,30 @@ def trip_metrics(
     *,
     line: RouteLike,
     agg: Agg,
-) -> Call[list[m.TripMetrics]]:
-    return _call(
-        get_trip_metrics.sync_detailed,
-        get_trip_metrics.asyncio_detailed,
-        each(convert.trip_metrics),
-        client=client,
-        start_date=to_date(start_date),
-        end_date=to_date(end_date),
-        line=lines.line_key(line),
-        agg=GetTripMetricsAgg(agg),
+) -> list[Call[list[m.TripMetrics]]]:
+    """One call per span of the range short enough for the API to accept."""
+    agg_value = GetTripMetricsAgg(agg)
+    key = lines.line_key(line)
+    spans = _ranges.spans(
+        to_date(start_date), to_date(end_date), _TRIP_METRICS_MAX_DAYS[agg_value]
     )
+    return [
+        _call(
+            get_trip_metrics.sync_detailed,
+            get_trip_metrics.asyncio_detailed,
+            each(convert.trip_metrics),
+            client=client,
+            start_date=start,
+            end_date=end,
+            line=key,
+            agg=agg_value,
+        )
+        for start, end in spans
+    ]
+
+
+def unique_by_date(entries: list[m.TripMetrics]) -> list[m.TripMetrics]:
+    return _ranges.unique(entries, key=lambda e: e.date)
 
 
 def scheduled_service(

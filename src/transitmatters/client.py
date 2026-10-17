@@ -22,6 +22,7 @@ import itertools
 import random
 import time
 from collections.abc import Container, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPStatus
 from typing import Any, Literal, Self
 
@@ -67,6 +68,7 @@ from .models import (
 DEFAULT_BASE_URL = "https://dashboard-api.labs.transitmatters.org"
 DEFAULT_TIMEOUT = 30.0
 DEFAULT_MAX_RETRIES = 3
+DEFAULT_MAX_CONCURRENCY = 8
 
 _RETRY_STATUSES = frozenset(
     {
@@ -169,6 +171,7 @@ class _BaseClient:
         *,
         timeout: float | httpx.Timeout | None = DEFAULT_TIMEOUT,
         max_retries: int = DEFAULT_MAX_RETRIES,
+        max_concurrency: int = DEFAULT_MAX_CONCURRENCY,
         headers: Mapping[str, str] | None = None,
         httpx_args: Mapping[str, Any] | None = None,
     ) -> None:
@@ -180,13 +183,19 @@ class _BaseClient:
             max_retries: How many times to retry a request that timed out,
                 couldn't connect, or got a 429, 502, 503, or 504, with
                 exponential backoff. `0` disables retries.
+            max_concurrency: How many requests to have in flight at once
+                when a method makes several, such as `headways` over a date
+                range.
             headers: Extra headers to send with every request.
             httpx_args: Extra keyword arguments for the underlying `httpx`
                 client, such as `transport` or `proxy`.
         """
         if isinstance(timeout, int | float):
             timeout = httpx.Timeout(timeout)
+        if max_concurrency < 1:
+            raise ValueError("max_concurrency must be at least 1")
         self._max_retries = max_retries
+        self._max_concurrency = max_concurrency
         self._client = Client(
             base_url=base_url,
             timeout=timeout,
@@ -259,6 +268,22 @@ class TransitMatters(_BaseClient):
             _sleep(delay)
         raise AssertionError("unreachable")
 
+    def _run_all[T](self, calls: Sequence[Call[list[T]]]) -> list[T]:
+        """Run `calls` on a thread pool and concatenate their results in order."""
+        if len(calls) == 1:
+            return self._run(calls[0])
+        # Create the shared httpx client now, so threads don't race to.
+        self._client.get_httpx_client()
+        workers = min(self._max_concurrency, len(calls))
+        with ThreadPoolExecutor(workers, thread_name_prefix="transitmatters") as pool:
+            futures = [pool.submit(self._run, call) for call in calls]
+            try:
+                return [item for future in futures for item in future.result()]
+            except BaseException:
+                for future in futures:
+                    future.cancel()
+                raise
+
     def healthcheck(self) -> Healthcheck:
         """Run the API's health checks.
 
@@ -267,48 +292,74 @@ class TransitMatters(_BaseClient):
         return self._run(ep.healthcheck(self._client))
 
     def headways(
-        self, date: DateLike, *, stop: OneOrMany | None = None
+        self,
+        date: DateLike,
+        end_date: DateLike | None = None,
+        *,
+        stop: OneOrMany | None = None,
     ) -> list[Headway]:
-        """Time between consecutive departures from `stop` on `date`.
+        """Time between consecutive departures from `stop` on `date`, or on
+        each day from `date` through `end_date`.
 
         Returns one event per departure. `stop` is one or more MBTA stop IDs,
-        e.g. `"70061"`.
+        e.g. `"70061"`. Over a range, days are fetched concurrently.
         """
-        return self._run(ep.headways(self._client, date, stop=stop))
+        return self._run_all(ep.headways(self._client, date, end_date, stop=stop))
 
-    def dwells(self, date: DateLike, *, stop: OneOrMany | None = None) -> list[Dwell]:
-        """Time vehicles spent stopped at `stop` on `date`.
+    def dwells(
+        self,
+        date: DateLike,
+        end_date: DateLike | None = None,
+        *,
+        stop: OneOrMany | None = None,
+    ) -> list[Dwell]:
+        """Time vehicles spent stopped at `stop` on `date`, or on each day
+        from `date` through `end_date`.
 
         Returns one event per stop a vehicle made. `stop` is one or more MBTA
         stop IDs, e.g. `"70061"`.
         """
-        return self._run(ep.dwells(self._client, date, stop=stop))
+        return self._run_all(ep.dwells(self._client, date, end_date, stop=stop))
 
     def travel_times(
         self,
         date: DateLike,
+        end_date: DateLike | None = None,
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
     ) -> list[TravelTime]:
-        """Travel time of each trip from `from_stop` to `to_stop` on `date`.
+        """Travel time of each trip from `from_stop` to `to_stop` on `date`,
+        or on each day from `date` through `end_date`.
 
         Returns one event per trip. Both are one or more MBTA stop IDs, e.g.
-        `"70061"`, and must be platforms for the same direction of travel.
+        `"70061"`, and must be platforms for the same direction of travel;
+        `RouteStops.trip` finds them.
         """
-        return self._run(
-            ep.travel_times(self._client, date, from_stop=from_stop, to_stop=to_stop)
+        return self._run_all(
+            ep.travel_times(
+                self._client, date, end_date, from_stop=from_stop, to_stop=to_stop
+            )
         )
 
     def historical_alerts(
-        self, date: DateLike, *, route: RouteLike | Sequence[RouteLike] | None = None
+        self,
+        date: DateLike,
+        end_date: DateLike | None = None,
+        *,
+        route: RouteLike | Sequence[RouteLike] | None = None,
     ) -> list[Alert]:
-        """Alerts that were active on `date` for `route`.
+        """Alerts that were active for `route` on `date`, or on any day from
+        `date` through `end_date`.
 
         `route` is one or more `Line`s or MBTA route IDs, e.g. `Line.RED` or
-        `"66"`.
+        `"66"`. An alert active on several days is returned once.
         """
-        return self._run(ep.historical_alerts(self._client, date, route=route))
+        return ep.unique_alerts(
+            self._run_all(
+                ep.historical_alerts(self._client, date, end_date, route=route)
+            )
+        )
 
     def aggregate_travel_times(
         self,
@@ -412,10 +463,13 @@ class TransitMatters(_BaseClient):
         """Speed and travel-time metrics for `line` over an inclusive date range.
 
         Returns one entry per day, week, or month. `line` is a rapid transit
-        `Line`, or its key, e.g. `"line-red"`.
+        `Line`, or its key, e.g. `"line-red"`. The API returns at most 150
+        entries per request, so longer ranges are fetched in pieces.
         """
-        return self._run(
-            ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
+        return ep.unique_by_date(
+            self._run_all(
+                ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
+            )
         )
 
     def scheduled_service(
@@ -535,6 +589,27 @@ class AsyncTransitMatters(_BaseClient):
             await _asleep(delay)
         raise AssertionError("unreachable")
 
+    async def _run_all[T](self, calls: Sequence[Call[list[T]]]) -> list[T]:
+        """Run `calls` concurrently and concatenate their results in order."""
+        if len(calls) == 1:
+            return await self._run(calls[0])
+        limit = asyncio.Semaphore(self._max_concurrency)
+
+        async def run(call: Call[list[T]]) -> list[T]:
+            async with limit:
+                return await self._run(call)
+
+        tasks = [asyncio.ensure_future(run(call)) for call in calls]
+        try:
+            results = await asyncio.gather(*tasks)
+        except BaseException:
+            for task in tasks:
+                task.cancel()
+            # Let them finish cancelling, and retrieve any other failures.
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
+        return [item for result in results for item in result]
+
     async def healthcheck(self) -> Healthcheck:
         """Run the API's health checks.
 
@@ -543,34 +618,53 @@ class AsyncTransitMatters(_BaseClient):
         return await self._run(ep.healthcheck(self._client))
 
     async def headways(
-        self, date: DateLike, *, stop: OneOrMany | None = None
+        self,
+        date: DateLike,
+        end_date: DateLike | None = None,
+        *,
+        stop: OneOrMany | None = None,
     ) -> list[Headway]:
-        """Time between consecutive departures from `stop` on `date`."""
-        return await self._run(ep.headways(self._client, date, stop=stop))
+        """Time between consecutive departures from `stop` on each day."""
+        return await self._run_all(ep.headways(self._client, date, end_date, stop=stop))
 
     async def dwells(
-        self, date: DateLike, *, stop: OneOrMany | None = None
+        self,
+        date: DateLike,
+        end_date: DateLike | None = None,
+        *,
+        stop: OneOrMany | None = None,
     ) -> list[Dwell]:
-        """Time vehicles spent stopped at `stop` on `date`."""
-        return await self._run(ep.dwells(self._client, date, stop=stop))
+        """Time vehicles spent stopped at `stop` on each day."""
+        return await self._run_all(ep.dwells(self._client, date, end_date, stop=stop))
 
     async def travel_times(
         self,
         date: DateLike,
+        end_date: DateLike | None = None,
         *,
         from_stop: OneOrMany | None = None,
         to_stop: OneOrMany | None = None,
     ) -> list[TravelTime]:
-        """Travel time of each trip from `from_stop` to `to_stop` on `date`."""
-        return await self._run(
-            ep.travel_times(self._client, date, from_stop=from_stop, to_stop=to_stop)
+        """Travel time of each trip from `from_stop` to `to_stop` on each day."""
+        return await self._run_all(
+            ep.travel_times(
+                self._client, date, end_date, from_stop=from_stop, to_stop=to_stop
+            )
         )
 
     async def historical_alerts(
-        self, date: DateLike, *, route: RouteLike | Sequence[RouteLike] | None = None
+        self,
+        date: DateLike,
+        end_date: DateLike | None = None,
+        *,
+        route: RouteLike | Sequence[RouteLike] | None = None,
     ) -> list[Alert]:
-        """Alerts that were active on `date` for `route`."""
-        return await self._run(ep.historical_alerts(self._client, date, route=route))
+        """Alerts that were active for `route` on any of the days."""
+        return ep.unique_alerts(
+            await self._run_all(
+                ep.historical_alerts(self._client, date, end_date, route=route)
+            )
+        )
 
     async def aggregate_travel_times(
         self,
@@ -652,8 +746,10 @@ class AsyncTransitMatters(_BaseClient):
         agg: Agg,
     ) -> list[TripMetrics]:
         """Speed and travel-time metrics for `line` over an inclusive date range."""
-        return await self._run(
-            ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
+        return ep.unique_by_date(
+            await self._run_all(
+                ep.trip_metrics(self._client, start_date, end_date, line=line, agg=agg)
+            )
         )
 
     async def scheduled_service(
