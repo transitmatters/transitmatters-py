@@ -1,0 +1,361 @@
+{
+ "data": [
+  {
+   "attributes": {
+    "latitude": null,
+    "long_name": "Andrew Elevator 872 (Lobby to street)",
+    "longitude": null,
+    "properties": [
+     {
+      "name": "alternate-service-text",
+      "value": "A shuttle bus will be available to transport customers between Andrew and Broadway. To exit at Andrew, take the train to Broadway and find station personnel or use a station call box to request the shuttle bus to Andrew. To board the Red Line, find station personnel or use a station call box to request the shuttle bus to Broadway."
+     },
+     {
+      "name": "excludes-stop",
+      "value": "13"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "door-andrw-busway"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "door-andrw-dotave"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "door-andrw-exitonly"
+     }
+    ],
+    "short_name": "Lobby to street",
+    "type": "ELEVATOR"
+   },
+   "id": "872",
+   "links": {
+    "self": "/facilities/872"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-andrw",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": null,
+    "long_name": "Lowell bike rack",
+    "longitude": null,
+    "properties": [
+     {
+      "name": "capacity",
+      "value": "18"
+     },
+     {
+      "name": "enclosed",
+      "value": "2"
+     },
+     {
+      "name": "secured",
+      "value": "2"
+     }
+    ],
+    "short_name": "Bike rack",
+    "type": "BIKE_STORAGE"
+   },
+   "id": "bike-NHRML-0254",
+   "links": {
+    "self": "/facilities/bike-NHRML-0254"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-NHRML-0254",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": null,
+    "long_name": "Assembly Elevator 717 (Platform to Foley Street paid lobby)",
+    "longitude": null,
+    "properties": [
+     {
+      "name": "alternate-service-text",
+      "value": "To exit, proceed to the south end of the platform and use Assembly Elevator 719, then use Assembly Elevator 718 to access Revolution Dr. To board, travel to the Revolution Dr entrance and use Assembly Elevator 718, then use Assembly Elevator 719 to access the platform."
+     },
+     {
+      "name": "excludes-stop",
+      "value": "door-astao-revol"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "node-astao-442-ground"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "node-astao-442-lobby"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "node-astao-443-lobby"
+     }
+    ],
+    "short_name": "Platform to Foley Street paid lobby",
+    "type": "ELEVATOR"
+   },
+   "id": "717",
+   "links": {
+    "self": "/facilities/717"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-astao",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": null,
+    "long_name": "Quincy Adams fare vending machine 202136",
+    "longitude": null,
+    "properties": [
+     {
+      "name": "enclosed",
+      "value": "1"
+     },
+     {
+      "name": "payment-form-accepted",
+      "value": "credit-debit-card"
+     }
+    ],
+    "short_name": "Fare vending machine 202136",
+    "type": "FARE_VENDING_MACHINE"
+   },
+   "id": "fvm-202136",
+   "links": {
+    "self": "/facilities/fvm-202136"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-qamnl",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": null,
+    "long_name": "Porter Escalator 507 (Alewife platform north to Ashmont/Braintree platform)",
+    "longitude": null,
+    "properties": [
+     {
+      "name": "direction",
+      "value": "up"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "70065"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "FR-0034"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "FR-0034-01"
+     },
+     {
+      "name": "excludes-stop",
+      "value": "FR-0034-02"
+     }
+    ],
+    "short_name": "Alewife platform north to Ashmont/Braintree platform",
+    "type": "ESCALATOR"
+   },
+   "id": "507",
+   "links": {
+    "self": "/facilities/507"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-portr",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": null,
+    "long_name": "Harvard ramp access",
+    "longitude": null,
+    "properties": [],
+    "short_name": "Ramp access",
+    "type": "RAMP"
+   },
+   "id": "ramp-harsq",
+   "links": {
+    "self": "/facilities/ramp-harsq"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-harsq",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": "42.3488161",
+    "long_name": "Lees 2 Market",
+    "longitude": "-71.1373246",
+    "properties": [
+     {
+      "name": "address",
+      "value": "1383 Commonwealth Ave, Allston, MA 02134"
+     },
+     {
+      "name": "contact-phone",
+      "value": "617-254-8274"
+     },
+     {
+      "name": "dispenses",
+      "value": "fare-media"
+     },
+     {
+      "name": "enclosed",
+      "value": "1"
+     },
+     {
+      "name": "payment-form-accepted",
+      "value": "cash"
+     }
+    ],
+    "short_name": "Lees 2 Market",
+    "type": "FARE_VENDING_RETAILER"
+   },
+   "id": "retailsale-302039",
+   "links": {
+    "self": "/facilities/retailsale-302039"
+   },
+   "relationships": {
+    "stop": {
+     "data": null
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": "42.310767",
+    "long_name": "Savin Hill Sydney Street Parking Lot",
+    "longitude": "-71.053819",
+    "properties": [
+     {
+      "name": "attended",
+      "value": "2"
+     },
+     {
+      "name": "capacity",
+      "value": "23"
+     },
+     {
+      "name": "capacity-accessible",
+      "value": "2"
+     },
+     {
+      "name": "car-sharing",
+      "value": "Zipcar"
+     },
+     {
+      "name": "contact",
+      "value": "MBTA Customer Support"
+     }
+    ],
+    "short_name": "Sydney Street Parking Lot",
+    "type": "PARKING_AREA"
+   },
+   "id": "park-shmnl",
+   "links": {
+    "self": "/facilities/park-shmnl"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-shmnl",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": "42.436513",
+    "long_name": "Oak Grove Washington St Pick-up/Drop-off",
+    "longitude": "-71.071296",
+    "properties": [],
+    "short_name": "Washington St",
+    "type": "PICK_DROP"
+   },
+   "id": "pick-ogmnl-wash",
+   "links": {
+    "self": "/facilities/pick-ogmnl-wash"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-ogmnl",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  },
+  {
+   "attributes": {
+    "latitude": "42.333082",
+    "long_name": "Woodland Pick-up/Drop-off",
+    "longitude": "-71.243526",
+    "properties": [],
+    "short_name": null,
+    "type": "PICK_DROP"
+   },
+   "id": "pick-woodl-main",
+   "links": {
+    "self": "/facilities/pick-woodl-main"
+   },
+   "relationships": {
+    "stop": {
+     "data": {
+      "id": "place-woodl",
+      "type": "stop"
+     }
+    }
+   },
+   "type": "facility"
+  }
+ ],
+ "jsonapi": {
+  "version": "1.0"
+ }
+}

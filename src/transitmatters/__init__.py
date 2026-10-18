@@ -5,8 +5,18 @@
 """
 
 from . import models
+from ._dataframe import to_dataframe
 from .client import DEFAULT_BASE_URL, AsyncTransitMatters, TransitMatters
-from .errors import APIError, TransitMattersError
+from .errors import (
+    APIError,
+    BadRequestError,
+    NetworkError,
+    NotFoundError,
+    RangeTooLongError,
+    ServerError,
+    TransitMattersError,
+)
+from .lines import Line
 
 __docformat__ = "google"
 
@@ -14,8 +24,15 @@ __docformat__ = "google"
 __all__ = [  # noqa: RUF022
     "TransitMatters",
     "AsyncTransitMatters",
-    "APIError",
+    "Line",
+    "to_dataframe",
     "TransitMattersError",
+    "APIError",
+    "BadRequestError",
+    "NotFoundError",
+    "RangeTooLongError",
+    "ServerError",
+    "NetworkError",
     "DEFAULT_BASE_URL",
     "models",
 ]

@@ -1,0 +1,90 @@
+{
+ "start_date": "2025-03-01",
+ "end_date": "2025-03-31",
+ "start_date_service_levels": {
+  "weekday": {
+   "date": "2025-03-03",
+   "service_levels": [
+    9,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "saturday": {
+   "date": "2025-03-01",
+   "service_levels": [
+    9,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "sunday": {
+   "date": "2025-03-02",
+   "service_levels": [
+    9,
+    0,
+    0,
+    0,
+    0
+   ]
+  }
+ },
+ "end_date_service_levels": {
+  "weekday": {
+   "date": "2025-03-31",
+   "service_levels": [
+    9,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "saturday": {
+   "date": "2025-03-29",
+   "service_levels": [
+    10,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "sunday": {
+   "date": "2025-03-30",
+   "service_levels": [
+    9,
+    0,
+    0,
+    0,
+    0
+   ]
+  }
+ },
+ "counts": [
+  {
+   "date": "2025-03-01",
+   "count": 370
+  },
+  {
+   "date": "2025-03-02",
+   "count": 354
+  },
+  {
+   "date": "2025-03-03",
+   "count": 406
+  },
+  {
+   "date": "2025-03-04",
+   "count": 406
+  },
+  {
+   "date": "2025-03-05",
+   "count": 406
+  }
+ ]
+}

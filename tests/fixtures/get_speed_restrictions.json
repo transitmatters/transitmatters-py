@@ -1,0 +1,19 @@
+{
+ "available": true,
+ "date": "2025-03-04",
+ "zones": [
+  {
+   "date": "2025-03-04",
+   "trackFeet": 400,
+   "reason": "Track",
+   "speedMph": 10,
+   "fromStopId": "place-cntsq",
+   "reported": "2025-02-26",
+   "lineId": "line-Red",
+   "description": "NB Central to Harvard",
+   "id": "000185R",
+   "toStopId": "place-harsq",
+   "direction": "NB"
+  }
+ ]
+}

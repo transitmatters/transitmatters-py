@@ -1,0 +1,212 @@
+[
+ {
+  "prediction": [
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "0-3 min",
+    "weekly": "2020-08-03",
+    "num_accurate_predictions": 128842,
+    "num_predictions": 141510
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "3-6 min",
+    "weekly": "2020-08-03",
+    "num_accurate_predictions": 131517,
+    "num_predictions": 143984
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "6-12 min",
+    "weekly": "2020-08-03",
+    "num_accurate_predictions": 261482,
+    "num_predictions": 282290
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "12-30 min",
+    "weekly": "2020-08-03",
+    "num_accurate_predictions": 709846,
+    "num_predictions": 809205
+   }
+  ],
+  "routeId": "Red",
+  "week": "2020-08-03"
+ },
+ {
+  "prediction": [
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "0-3 min",
+    "weekly": "2020-08-07",
+    "num_accurate_predictions": 260332,
+    "num_predictions": 286559
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "3-6 min",
+    "weekly": "2020-08-07",
+    "num_accurate_predictions": 262345,
+    "num_predictions": 290745
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "6-12 min",
+    "weekly": "2020-08-07",
+    "num_accurate_predictions": 518778,
+    "num_predictions": 569042
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "12-30 min",
+    "weekly": "2020-08-07",
+    "num_accurate_predictions": 1375225,
+    "num_predictions": 1630223
+   }
+  ],
+  "routeId": "Red",
+  "week": "2020-08-07"
+ },
+ {
+  "prediction": [
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "0-3 min",
+    "weekly": "2020-08-10",
+    "num_accurate_predictions": 126760,
+    "num_predictions": 139618
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "3-6 min",
+    "weekly": "2020-08-10",
+    "num_accurate_predictions": 128809,
+    "num_predictions": 141110
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "6-12 min",
+    "weekly": "2020-08-10",
+    "num_accurate_predictions": 256159,
+    "num_predictions": 277144
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "12-30 min",
+    "weekly": "2020-08-10",
+    "num_accurate_predictions": 683246,
+    "num_predictions": 788909
+   }
+  ],
+  "routeId": "Red",
+  "week": "2020-08-10"
+ },
+ {
+  "prediction": [
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "0-3 min",
+    "weekly": "2020-08-14",
+    "num_accurate_predictions": 256095,
+    "num_predictions": 282910
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "3-6 min",
+    "weekly": "2020-08-14",
+    "num_accurate_predictions": 258213,
+    "num_predictions": 285681
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "6-12 min",
+    "weekly": "2020-08-14",
+    "num_accurate_predictions": 512149,
+    "num_predictions": 558112
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "12-30 min",
+    "weekly": "2020-08-14",
+    "num_accurate_predictions": 1347307,
+    "num_predictions": 1591252
+   }
+  ],
+  "routeId": "Red",
+  "week": "2020-08-14"
+ },
+ {
+  "prediction": [
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "0-3 min",
+    "weekly": "2020-08-17",
+    "num_accurate_predictions": 127812,
+    "num_predictions": 141042
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "3-6 min",
+    "weekly": "2020-08-17",
+    "num_accurate_predictions": 128855,
+    "num_predictions": 141267
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "6-12 min",
+    "weekly": "2020-08-17",
+    "num_accurate_predictions": 254386,
+    "num_predictions": 276299
+   },
+   {
+    "mode": "subway",
+    "arrival_departure": "blended",
+    "route_id": "Red",
+    "bin": "12-30 min",
+    "weekly": "2020-08-17",
+    "num_accurate_predictions": 665300,
+    "num_predictions": 755122
+   }
+  ],
+  "routeId": "Red",
+  "week": "2020-08-17"
+ }
+]

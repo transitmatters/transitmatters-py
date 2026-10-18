@@ -1,0 +1,27 @@
+[
+ {
+  "date": "2025-03-01",
+  "scheduled": 262,
+  "delivered": 271.0
+ },
+ {
+  "date": "2025-03-02",
+  "scheduled": 251,
+  "delivered": 255.0
+ },
+ {
+  "date": "2025-03-03",
+  "scheduled": 287,
+  "delivered": 211.0
+ },
+ {
+  "date": "2025-03-04",
+  "scheduled": 287,
+  "delivered": 258.0
+ },
+ {
+  "date": "2025-03-05",
+  "scheduled": 287,
+  "delivered": 274.0
+ }
+]

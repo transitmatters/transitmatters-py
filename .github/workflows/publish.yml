@@ -25,7 +25,7 @@ jobs:
         run: uv build
 
       - name: Smoke test wheel
-        run: uv run --isolated --no-project --with dist/*.whl python -c "import transitmatters._generated"
+        run: uv run --isolated --no-project --with dist/*.whl python -c "import transitmatters._generated; from transitmatters import Line, TransitMatters, to_dataframe"
 
       - uses: actions/upload-artifact@v4
         with:

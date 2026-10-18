@@ -1,0 +1,27 @@
+[
+ {
+  "valid_from": "2025-03-04T20:00:00-05:00",
+  "valid_to": "2025-03-05T02:59:00-05:00",
+  "text": "Red Line Braintree Branch: All train service at Quincy Adams will operate on a single track, from 8 PM to the end of service, through Friday, March 7, for signal work. Riders may experience longer wait times during this work."
+ },
+ {
+  "valid_from": "2025-03-05T20:00:00-05:00",
+  "valid_to": "2025-03-06T02:59:00-05:00",
+  "text": "Red Line Braintree Branch: All train service at Quincy Adams will operate on a single track, from 8 PM to the end of service, through Friday, March 7, for signal work. Riders may experience longer wait times during this work."
+ },
+ {
+  "valid_from": "2025-03-06T20:00:00-05:00",
+  "valid_to": "2025-03-07T02:59:00-05:00",
+  "text": "Red Line Braintree Branch: All train service at Quincy Adams will operate on a single track, from 8 PM to the end of service, through Friday, March 7, for signal work. Riders may experience longer wait times during this work."
+ },
+ {
+  "valid_from": "2025-03-07T20:00:00-05:00",
+  "valid_to": "2025-03-08T02:59:00-05:00",
+  "text": "Red Line Braintree Branch: All train service at Quincy Adams will operate on a single track, from 8 PM to the end of service, through Friday, March 7, for signal work. Riders may experience longer wait times during this work."
+ },
+ {
+  "valid_from": "2025-03-04T05:17:00-05:00",
+  "valid_to": "2025-03-04T08:14:40-05:00",
+  "text": "Red Line: Delays of about 25 minutes due to a disabled overnight track maintenance vehicle between Charles/MGH and Kendall/MIT."
+ }
+]
