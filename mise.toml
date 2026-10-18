@@ -1,0 +1,48 @@
+# Dev environment for mise (https://mise.jdx.dev). uv installs Python (from
+# .python-version) and the dependencies; mise provides uv, activates .venv
+# when you cd into the repo, and runs the tasks below (`mise tasks`).
+
+[tools]
+uv = "latest"
+
+[settings]
+python.uv_venv_auto = true
+
+[tasks.test]
+description = "Run the tests"
+run = "uv run pytest"
+
+[tasks.lint]
+description = "Lint and check formatting"
+run = ["uv run ruff check .", "uv run ruff format --check ."]
+
+[tasks.fmt]
+description = "Fix lint errors and format"
+run = ["uv run ruff check --fix .", "uv run ruff format ."]
+
+[tasks.typecheck]
+description = "Type check"
+run = "uv run pyright src tests"
+
+[tasks.check]
+description = "Run what CI runs"
+depends = ["lint", "typecheck", "test"]
+
+[tasks.docs]
+description = "Preview the API docs at http://localhost:8080"
+run = "uv run python scripts/docs.py"
+
+[tasks.sync-spec]
+description = "Fetch the upstream OpenAPI spec"
+run = "uv run python scripts/sync_spec.py"
+
+[tasks.generate]
+description = "Regenerate src/transitmatters/_generated from the spec"
+run = """
+uv run openapi-python-client generate \
+  --path spec/openapi.json \
+  --config openapi-config.yml \
+  --meta none \
+  --output-path src/transitmatters/_generated \
+  --overwrite
+"""
