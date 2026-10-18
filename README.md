@@ -6,6 +6,9 @@ MBTA performance data from the [TransitMatters Data Dashboard](https://dashboard
 as Python objects: travel times, headways, dwells, ridership, service levels,
 delays, speed restrictions, and alerts.
 
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/transitmatters/transitmatters-py/blob/main/examples/getting-started.ipynb)
+Try the getting-started notebook in your browser, with nothing to install.
+
 ```sh
 pip install transitmatters            # or 'transitmatters[pandas]' for to_dataframe
 ```
@@ -191,11 +194,22 @@ uv sync
 uv run pytest
 uv run ruff check && uv run pyright src tests
 uv run python scripts/docs.py  # preview the API docs at http://localhost:8080
+
+uvx --with tox-uv tox              # test on every supported Python (3.12+)
+uvx --with tox-uv tox -e examples  # run the docs examples against the live API
 ```
 
 The API docs are built from this README and the docstrings in
 `src/transitmatters/`, and are published to GitHub Pages on every push to
 `main`.
+
+`tox -e examples` runs every Python code block in this README and in the
+docstrings, plus the notebooks in `examples/`. Code blocks can use `tm` and
+`Line` without defining them (see `conftest.py`). It runs weekly, and on pull
+requests that change the examples or the package. If you change a notebook,
+rerun it and save it with its outputs, so they show on GitHub and in Colab. The
+notebook's install cell is tagged `skip-execution`, so tests use your checkout
+rather than the release on PyPI.
 
 `src/transitmatters/_generated/` is generated from the upstream OpenAPI spec by
 `openapi-python-client`; don't edit it by hand. A weekly workflow syncs the

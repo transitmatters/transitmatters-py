@@ -35,5 +35,23 @@ jobs:
       - name: Type check
         run: uv run pyright src tests
 
+  test:
+    name: test (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The env_list in tox.toml.
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python ${{ matrix.python }}
+        run: uv python install ${{ matrix.python }}
+
       - name: Test
-        run: uv run pytest -q
+        run: uvx --with tox-uv tox run -e ${{ matrix.python }}

@@ -516,7 +516,7 @@ class StopPair(Model):
 
     ```python
     pair = tm.stops(Line.RED).trip("Davis", "Porter")
-    tm.travel_times(day, from_stop=pair.from_stop, to_stop=pair.to_stop)
+    tm.travel_times("2025-03-04", from_stop=pair.from_stop, to_stop=pair.to_stop)
     ```
     """
 

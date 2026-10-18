@@ -11,3 +11,6 @@ wheels/
 
 # Built API docs
 site/
+
+# tox environments
+.tox/

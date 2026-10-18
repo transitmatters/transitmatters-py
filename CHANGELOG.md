@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Python 3.12 support. The package now supports Python 3.12, 3.13, and 3.14.
+- A [getting-started notebook](examples/getting-started.ipynb) that runs in
+  Google Colab.
+
 ## 0.2.0
 
 This release replaces the generated models with the package's own, and

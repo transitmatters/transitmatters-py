@@ -1,0 +1,38 @@
+name: Examples
+
+# Runs the code examples in README.md, the docstrings, and examples/ against
+# the live API, so they keep working as the API and the package change. Each
+# run makes about 80 API requests.
+
+on:
+  schedule:
+    - cron: "47 13 * * 1" # Mondays 13:47 UTC, after the spec sync
+  pull_request:
+    paths:
+      - README.md
+      - examples/**
+      - src/**
+      - conftest.py
+      - tox.toml
+      - .github/workflows/examples.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: examples-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Run examples
+        run: uvx --with tox-uv tox run -e examples

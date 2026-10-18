@@ -12,6 +12,14 @@ python.uv_venv_auto = true
 description = "Run the tests"
 run = "uv run pytest"
 
+[tasks.test-all]
+description = "Run the tests on every supported Python version"
+run = "uvx --with tox-uv tox"
+
+[tasks.examples]
+description = "Run the README, docstring, and notebook examples against the live API"
+run = "uvx --with tox-uv tox -e examples"
+
 [tasks.lint]
 description = "Lint and check formatting"
 run = ["uv run ruff check .", "uv run ruff format --check ."]

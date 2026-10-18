@@ -1,0 +1,36 @@
+# Runs the tests on each supported Python version, with the dependency
+# versions pinned in uv.lock. uv downloads any Python that isn't installed.
+#
+#   uvx --with tox-uv tox                 # every supported version
+#   uvx --with tox-uv tox -e 3.12         # one version
+#   uvx --with tox-uv tox -e examples     # the docs examples, against the live API
+#
+# Keep env_list in sync with the classifiers in pyproject.toml and the test
+# matrix in .github/workflows/ci.yml.
+
+requires = ["tox>=4.22", "tox-uv>=1.25"]
+env_list = ["3.12", "3.13", "3.14"]
+
+[env_run_base]
+description = "Run the tests on {env_name}"
+runner = "uv-venv-lock-runner"
+# Install the package as users get it, not in editable mode.
+package = "wheel"
+extras = ["pandas"]
+dependency_groups = ["test"]
+commands = [["pytest", { replace = "posargs", default = ["-q"], extend = true }]]
+
+[env.examples]
+description = "Run the README, docstring, and notebook examples against the live API"
+dependency_groups = ["examples"]
+commands = [
+  [
+    "pytest",
+    "--markdown-docs",
+    "--nbmake",
+    "README.md",
+    "src/transitmatters/",
+    "examples/",
+    { replace = "posargs", extend = true },
+  ],
+]

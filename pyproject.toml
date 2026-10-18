@@ -3,7 +3,7 @@ name = "transitmatters"
 version = "0.2.0"
 description = "Official Python client for the TransitMatters Data Dashboard API"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 license = "MIT"
 dependencies = [
     "httpx>=0.27",
@@ -13,6 +13,9 @@ dependencies = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Typing :: Typed",
 ]
 
@@ -24,10 +27,19 @@ Repository = "https://github.com/transitmatters/transitmatters-py"
 pandas = ["pandas>=2.2"]
 
 [dependency-groups]
+test = ["pytest"]
+# Runs the README, docstring, and notebook examples; see tox.toml.
+examples = [
+    "pytest",
+    "pytest-markdown-docs",
+    "nbmake",
+    "matplotlib",
+]
 dev = [
+    { include-group = "test" },
+    { include-group = "examples" },
     "openapi-python-client",
     "ruff",
-    "pytest",
     "pdoc>=16.0.0",
     "pyright>=1.1.414",
     "pandas",
@@ -42,3 +54,7 @@ packages = ["src/transitmatters"]
 
 [tool.ruff]
 extend-exclude = ["src/transitmatters/_generated"]
+
+[tool.pyright]
+# The oldest supported Python, so newer standard library APIs are flagged.
+pythonVersion = "3.12"
