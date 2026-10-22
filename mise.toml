@@ -37,8 +37,8 @@ description = "Run what CI runs"
 depends = ["lint", "typecheck", "test"]
 
 [tasks.docs]
-description = "Preview the API docs at http://localhost:8080"
-run = "uv run python scripts/docs.py"
+description = "Preview the docs at http://127.0.0.1:8000"
+run = "uv run mkdocs serve"
 
 [tasks.sync-spec]
 description = "Fetch the upstream OpenAPI spec"

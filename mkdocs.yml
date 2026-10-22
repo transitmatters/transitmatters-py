@@ -1,0 +1,96 @@
+site_name: transitmatters-py
+site_description: Official Python client for the TransitMatters Data Dashboard API
+site_url: https://transitmatters.github.io/transitmatters-py/
+repo_url: https://github.com/transitmatters/transitmatters-py
+repo_name: transitmatters/transitmatters-py
+edit_uri: edit/main/docs/
+copyright: © TransitMatters
+
+# Styling matches the Labs docs at https://transitmatters.github.io/architecture/
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  logo: assets/flask.png
+  favicon: assets/favicon.png
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - content.action.edit
+    - content.code.copy
+    - navigation.indexes
+    - navigation.instant
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - search.suggest
+    - toc.follow
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - include-markdown
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            # The package's __all__ is ordered for the docs.
+            members_order: [__all__, source]
+            heading_level: 1
+            show_root_heading: true
+            show_source: true
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+
+nav:
+  - Home: index.md
+  - API reference:
+      - transitmatters: api/index.md
+      - transitmatters.models: api/models.md
+
+validation:
+  links:
+    anchors: warn
+    unrecognized_links: warn
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/transitmatters
+    - icon: fontawesome/solid/globe
+      link: https://transitmatters.org/transitmatters-labs
