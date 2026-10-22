@@ -35,12 +35,20 @@ examples = [
     "nbmake",
     "matplotlib",
 ]
+# Builds the docs site; see mkdocs.yml.
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.7,<10",
+    "mkdocstrings[python]>=1.0",
+    "mkdocs-include-markdown-plugin>=7.2",
+    "ruff",  # formats the signatures in the API reference
+]
 dev = [
     { include-group = "test" },
     { include-group = "examples" },
+    { include-group = "docs" },
     "openapi-python-client",
     "ruff",
-    "pdoc>=16.0.0",
     "pyright>=1.1.414",
     "pandas",
 ]

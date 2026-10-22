@@ -1,7 +1,5 @@
 # transitmatters-py
 
-<!-- The API docs include this file from here down. -->
-
 MBTA performance data from the [TransitMatters Data Dashboard](https://dashboard.transitmatters.org),
 as Python objects: travel times, headways, dwells, ridership, service levels,
 delays, speed restrictions, and alerts.
@@ -193,13 +191,13 @@ requests at once (8 by default).
 uv sync
 uv run pytest
 uv run ruff check && uv run pyright src tests
-uv run python scripts/docs.py  # preview the API docs at http://localhost:8080
+uv run mkdocs serve  # preview the docs at http://127.0.0.1:8000
 
 uvx --with tox-uv tox              # test on every supported Python (3.12+)
 uvx --with tox-uv tox -e examples  # run the docs examples against the live API
 ```
 
-The API docs are built from this README and the docstrings in
+The docs are built with MkDocs from this README and the docstrings in
 `src/transitmatters/`, and are published to GitHub Pages on every push to
 `main`.
 

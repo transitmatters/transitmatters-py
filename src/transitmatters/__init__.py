@@ -1,8 +1,4 @@
-"""Python client for the TransitMatters Data Dashboard API.
-
-.. include:: ../../README.md
-   :start-after: <!-- The API docs include this file from here down. -->
-"""
+"""Python client for the TransitMatters Data Dashboard API."""
 
 from . import models
 from ._dataframe import to_dataframe
