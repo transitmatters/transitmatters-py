@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `bus_trip_metrics`: trip counts, speeds, and fleet for a bus route, or
+  several added together, by day, week, or month. Filter by time of day
+  with `time_band`, and by business day or weekend with `day_type`.
+- `bus_speed_leaderboard`: the slowest bus routes over a date range.
+- `commuter_rail_trip_metrics`: the fleet that ran a commuter rail route.
+- `reliability`: on-time performance of The RIDE or commuter rail.
+- `commuter_rail_scorecard`: a commuter rail schedule measured against
+  Regional Rail standards.
+- `weather`: hourly weather in downtown Boston.
+- `time_predictions` takes optional `start_date` and `end_date`, to fetch
+  part of the history.
+
 ## 0.2.1
 
 ### Added

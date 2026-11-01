@@ -1,0 +1,37 @@
+[
+ {
+  "count": 504,
+  "miles_covered": 948.1690000000001,
+  "n_traversals": 4859,
+  "route": "55",
+  "total_time": 548181
+ },
+ {
+  "count": 1289,
+  "miles_covered": 6360.172,
+  "n_traversals": 39007,
+  "route": "19",
+  "total_time": 3532437.6
+ },
+ {
+  "count": 1490,
+  "miles_covered": 3395.445,
+  "n_traversals": 12256,
+  "route": "504",
+  "total_time": 1822939.4
+ },
+ {
+  "count": 714,
+  "miles_covered": 1926.589,
+  "n_traversals": 7878,
+  "route": "4",
+  "total_time": 1015099
+ },
+ {
+  "count": 6349,
+  "miles_covered": 27758.345,
+  "n_traversals": 138248,
+  "route": "1",
+  "total_time": 14387301
+ }
+]

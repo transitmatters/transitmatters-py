@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import importlib
 import inspect
 import pkgutil
 from typing import Any
@@ -15,6 +16,7 @@ from transitmatters import (
     DEFAULT_BASE_URL,
     APIError,
     AsyncTransitMatters,
+    RangeTooLongError,
     TransitMatters,
 )
 from transitmatters import _endpoints as endpoints
@@ -104,8 +106,52 @@ def test_omitted_filters_are_not_sent():
     tm, requests = mock_client(json=[])
 
     tm.headways("2024-03-01")
+    tm.time_predictions("Red")
+    tm.bus_trip_metrics("2026-09-01", "2026-09-30", route="1", agg="daily")
 
     assert requests[0].url.query == b""
+    assert dict(requests[1].url.params) == {"route_id": "Red"}
+    assert "time_band" not in requests[2].url.params
+    assert "day_type" not in requests[2].url.params
+
+
+def test_time_predictions_date_filters_are_sent_as_dates():
+    tm, requests = mock_client(json=[])
+
+    tm.time_predictions(
+        "Red", start_date=datetime.datetime(2025, 1, 1, 9), end_date="2025-03-31"
+    )
+
+    assert requests[0].url.params["start_date"] == "2025-01-01"
+    assert requests[0].url.params["end_date"] == "2025-03-31"
+
+
+def test_bus_trip_metrics_sends_routes_and_filters():
+    tm, requests = mock_client(json=[])
+
+    tm.bus_trip_metrics(
+        "2026-09-01",
+        "2026-09-30",
+        route=["114", "116", "117"],
+        agg="weekly",
+        time_band="am_peak",
+        day_type="business_day",
+    )
+
+    params = requests[0].url.params
+    assert params["route"] == "114,116,117"
+    assert (params["time_band"], params["day_type"]) == ("am_peak", "business_day")
+
+
+def test_bus_speed_leaderboard_is_not_split():
+    tm, requests = mock_client(
+        403, {"Code": "ForbiddenError", "Message": "Date range too long."}
+    )
+
+    with pytest.raises(RangeTooLongError):
+        tm.bus_speed_leaderboard("2026-01-01", "2026-09-30", limit=200)
+    assert len(requests) == 1
+    assert requests[0].url.params["limit"] == "200"
 
 
 def test_agg_is_sent_and_line_delays_defaults_to_weekly():
@@ -211,11 +257,35 @@ def test_async_client_mirrors_sync_client():
     assert methods(TransitMatters) == methods(AsyncTransitMatters)
 
 
-@pytest.mark.parametrize(
-    "endpoint", sorted(m.name for m in pkgutil.iter_modules(generated_api.__path__))
+GENERATED_ENDPOINTS = sorted(
+    m.name for m in pkgutil.iter_modules(generated_api.__path__)
 )
+
+
+@pytest.mark.parametrize("endpoint", GENERATED_ENDPOINTS)
 def test_every_generated_endpoint_is_wrapped(endpoint):
     # Fails when a spec sync adds an endpoint, as a reminder to wrap it.
     source = inspect.getsource(endpoints)
     assert f"{endpoint}.sync_detailed," in source
     assert f"{endpoint}.asyncio_detailed," in source
+
+
+@pytest.mark.parametrize("endpoint", GENERATED_ENDPOINTS)
+def test_every_generated_parameter_is_passed(endpoint):
+    # Fails when a spec sync adds a query parameter to an endpoint, as a
+    # reminder to pass it. Path parameters are positional, so aren't named.
+    module = importlib.import_module(f"{generated_api.__name__}.{endpoint}")
+    builder = next(
+        source
+        for _, fn in inspect.getmembers(endpoints, inspect.isfunction)
+        if f"{endpoint}.sync_detailed," in (source := inspect.getsource(fn))
+    )
+    parameters = inspect.signature(module.sync_detailed).parameters.values()
+    missing = [
+        p.name
+        for p in parameters
+        if p.kind is p.KEYWORD_ONLY
+        and p.name != "client"
+        and f"{p.name}=" not in builder
+    ]
+    assert missing == []

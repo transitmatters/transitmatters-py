@@ -23,6 +23,10 @@ from ._generated.api.api import (
     get_aggregate_headways,
     get_aggregate_travel_times,
     get_aggregate_travel_times_v2,
+    get_bus_speed_leaderboard,
+    get_bus_trip_metrics,
+    get_commuter_rail_scorecard,
+    get_commuter_rail_trip_metrics,
     get_current_alerts,
     get_dwells,
     get_facilities,
@@ -30,6 +34,7 @@ from ._generated.api.api import (
     get_healthcheck,
     get_historical_alerts,
     get_line_delays,
+    get_reliability,
     get_ridership,
     get_routes,
     get_scheduled_service,
@@ -40,10 +45,18 @@ from ._generated.api.api import (
     get_time_predictions,
     get_travel_times,
     get_trip_metrics,
+    get_weather,
 )
 from ._generated.client import Client
 from ._generated.models import (
+    GetBusTripMetricsAgg,
+    GetBusTripMetricsDayType,
+    GetBusTripMetricsTimeBand,
+    GetCommuterRailScorecardAgg,
+    GetCommuterRailScorecardDayKind,
+    GetCommuterRailTripMetricsAgg,
     GetLineDelaysAgg,
+    GetReliabilityAgg,
     GetScheduledServiceAgg,
     GetServiceHoursAgg,
     GetTripMetricsAgg,
@@ -58,6 +71,12 @@ OneOrMany = str | Sequence[str]
 """A single ID, or several."""
 
 Agg = Literal["daily", "weekly", "monthly"]
+
+TimeBand = Literal["early_am", "am_peak", "midday", "pm_peak", "evening", "late_night"]
+
+DayType = Literal["business_day", "weekend_or_holiday"]
+
+DayKind = Literal["weekday", "saturday", "sunday", "all"]
 
 _OK = (HTTPStatus.OK,)
 # The healthcheck reports failing checks with a 500 and a normal body.
@@ -95,6 +114,10 @@ def to_date(value: DateLike) -> datetime.date:
     if isinstance(value, datetime.date):
         return value
     return datetime.date.fromisoformat(value)
+
+
+def _to_opt_date(value: DateLike | None) -> datetime.date | Unset:
+    return UNSET if value is None else to_date(value)
 
 
 def _to_list(values: OneOrMany | None) -> list[str] | Unset:
@@ -320,12 +343,31 @@ def line_delays(
     )
 
 
-# Trip metrics refuses ranges of more than 150 entries (upstream speed.py).
-_TRIP_METRICS_MAX_DAYS = {
-    GetTripMetricsAgg.DAILY: 150,
-    GetTripMetricsAgg.WEEKLY: 7 * 150,
-    GetTripMetricsAgg.MONTHLY: 30 * 150,
+# The trip metrics endpoints refuse ranges of more than 150 entries (upstream
+# speed.py).
+_TRIP_METRICS_MAX_DAYS = {"daily": 150, "weekly": 7 * 150, "monthly": 30 * 150}
+_PERIOD_START = {
+    "daily": None,
+    "weekly": _ranges.week_start,
+    "monthly": _ranges.month_start,
 }
+
+
+def _trip_metrics_spans(
+    start_date: DateLike, end_date: DateLike, agg: str
+) -> list[tuple[datetime.date, datetime.date]]:
+    # Bus and commuter rail sum each week or month from the days requested,
+    # so a period split between two requests would come back as two halves.
+    return _ranges.spans(
+        to_date(start_date),
+        to_date(end_date),
+        _TRIP_METRICS_MAX_DAYS[agg],
+        _PERIOD_START[agg],
+    )
+
+
+# Each trip metrics builder returns one call per span of the range short
+# enough for the API to accept.
 
 
 def trip_metrics(
@@ -336,12 +378,8 @@ def trip_metrics(
     line: RouteLike,
     agg: Agg,
 ) -> list[Call[list[m.TripMetrics]]]:
-    """One call per span of the range short enough for the API to accept."""
     agg_value = GetTripMetricsAgg(agg)
     key = lines.line_key(line)
-    spans = _ranges.spans(
-        to_date(start_date), to_date(end_date), _TRIP_METRICS_MAX_DAYS[agg_value]
-    )
     return [
         _call(
             get_trip_metrics.sync_detailed,
@@ -353,12 +391,83 @@ def trip_metrics(
             line=key,
             agg=agg_value,
         )
-        for start, end in spans
+        for start, end in _trip_metrics_spans(start_date, end_date, agg_value.value)
     ]
 
 
 def unique_by_date(entries: list[m.TripMetrics]) -> list[m.TripMetrics]:
     return _ranges.unique(entries, key=lambda e: e.date)
+
+
+def bus_trip_metrics(
+    client: Client,
+    start_date: DateLike,
+    end_date: DateLike,
+    *,
+    route: OneOrMany,
+    agg: Agg,
+    time_band: TimeBand | None,
+    day_type: DayType | None,
+) -> list[Call[list[m.BusTripMetrics]]]:
+    agg_value = GetBusTripMetricsAgg(agg)
+    # Several routes are sent as one comma-separated ID, and summed.
+    routes = route if isinstance(route, str) else ",".join(route)
+    band = UNSET if time_band is None else GetBusTripMetricsTimeBand(time_band)
+    days = UNSET if day_type is None else GetBusTripMetricsDayType(day_type)
+    return [
+        _call(
+            get_bus_trip_metrics.sync_detailed,
+            get_bus_trip_metrics.asyncio_detailed,
+            each(convert.bus_trip_metrics),
+            client=client,
+            start_date=start,
+            end_date=end,
+            route=routes,
+            agg=agg_value,
+            time_band=band,
+            day_type=days,
+        )
+        for start, end in _trip_metrics_spans(start_date, end_date, agg_value.value)
+    ]
+
+
+def commuter_rail_trip_metrics(
+    client: Client,
+    start_date: DateLike,
+    end_date: DateLike,
+    *,
+    route: str,
+    agg: Agg,
+) -> list[Call[list[m.CommuterRailTripMetrics]]]:
+    agg_value = GetCommuterRailTripMetricsAgg(agg)
+    return [
+        _call(
+            get_commuter_rail_trip_metrics.sync_detailed,
+            get_commuter_rail_trip_metrics.asyncio_detailed,
+            each(convert.commuter_rail_trip_metrics),
+            client=client,
+            start_date=start,
+            end_date=end,
+            route=route,
+            agg=agg_value,
+        )
+        for start, end in _trip_metrics_spans(start_date, end_date, agg_value.value)
+    ]
+
+
+def bus_speed_leaderboard(
+    client: Client, start_date: DateLike, end_date: DateLike, *, limit: int
+) -> Call[list[m.BusRouteSpeed]]:
+    # Not split like trip metrics: each request ranks only its own range.
+    return _call(
+        get_bus_speed_leaderboard.sync_detailed,
+        get_bus_speed_leaderboard.asyncio_detailed,
+        each(convert.bus_route_speed),
+        client=client,
+        start_date=to_date(start_date),
+        end_date=to_date(end_date),
+        limit=limit,
+    )
 
 
 def scheduled_service(
@@ -438,7 +547,11 @@ def service_hours(
 
 
 def time_predictions(
-    client: Client, route: RouteLike
+    client: Client,
+    route: RouteLike,
+    *,
+    start_date: DateLike | None,
+    end_date: DateLike | None,
 ) -> Call[list[m.TimePredictionWeek]]:
     return _call(
         get_time_predictions.sync_detailed,
@@ -446,6 +559,63 @@ def time_predictions(
         each(convert.time_prediction_week),
         client=client,
         route_id=lines.route_id(route, method="time_predictions"),
+        start_date=_to_opt_date(start_date),
+        end_date=_to_opt_date(end_date),
+    )
+
+
+def reliability(
+    client: Client,
+    start_date: DateLike,
+    end_date: DateLike,
+    *,
+    route: str,
+    agg: Agg,
+) -> Call[list[m.Reliability]]:
+    return _call(
+        get_reliability.sync_detailed,
+        get_reliability.asyncio_detailed,
+        each(convert.reliability),
+        client=client,
+        route_id=route,
+        start_date=to_date(start_date),
+        end_date=to_date(end_date),
+        agg=GetReliabilityAgg(agg),
+    )
+
+
+def commuter_rail_scorecard(
+    client: Client,
+    start_date: DateLike,
+    end_date: DateLike,
+    *,
+    route: str,
+    agg: Agg,
+    day_kind: DayKind,
+) -> Call[list[m.CommuterRailScorecard]]:
+    return _call(
+        get_commuter_rail_scorecard.sync_detailed,
+        get_commuter_rail_scorecard.asyncio_detailed,
+        each(convert.commuter_rail_scorecard),
+        client=client,
+        route_id=route,
+        start_date=to_date(start_date),
+        end_date=to_date(end_date),
+        agg=GetCommuterRailScorecardAgg(agg),
+        day_kind=GetCommuterRailScorecardDayKind(day_kind),
+    )
+
+
+def weather(
+    client: Client, start_date: DateLike, end_date: DateLike
+) -> Call[list[m.Weather]]:
+    return _call(
+        get_weather.sync_detailed,
+        get_weather.asyncio_detailed,
+        each(convert.weather),
+        client=client,
+        start_date=to_date(start_date),
+        end_date=to_date(end_date),
     )
 
 

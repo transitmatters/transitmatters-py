@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Callable, Iterable, Mapping
-from typing import TypedDict
+from typing import Any, TypedDict
 from zoneinfo import ZoneInfo
 
 from . import models as m
@@ -69,6 +69,25 @@ def _opt_date(value: str | None | Unset) -> datetime.date | None:
 def _opt_float(value: str | None | Unset) -> float | None:
     value = _opt(value)
     return None if value is None else float(value)
+
+
+def _opt_seconds(value: float | None | Unset) -> datetime.timedelta | None:
+    value = _opt(value)
+    return None if value is None else datetime.timedelta(seconds=value)
+
+
+def _extra_float(extra: Mapping[str, Any], key: str) -> float | None:
+    value = extra.get(key)
+    return None if value is None else float(value)
+
+
+def _fleet_mix(extra: Mapping[str, Any]) -> dict[str, float]:
+    # The spec can't list the fleet_mix_<type> fields, so they arrive as extras.
+    return {
+        key.removeprefix(_FLEET_MIX_PREFIX): float(value)
+        for key, value in extra.items()
+        if key.startswith(_FLEET_MIX_PREFIX) and value is not None
+    }
 
 
 def _consist(value: str | None | Unset) -> tuple[str, ...]:
@@ -236,12 +255,6 @@ def travel_time_stats(r: g.TravelTimeAggregate2Response) -> m.TravelTimeStats:
 
 
 def trip_metrics(e: g.TripMetricsEntry) -> m.TripMetrics:
-    # The spec can't list the fleet_mix_<type> fields, so they arrive as extras.
-    fleet_mix = {
-        key.removeprefix(_FLEET_MIX_PREFIX): float(value)
-        for key, value in e.additional_properties.items()
-        if key.startswith(_FLEET_MIX_PREFIX) and value is not None
-    }
     return m.TripMetrics(
         date=_date(e.date),
         line=e.line,
@@ -250,7 +263,48 @@ def trip_metrics(e: g.TripMetricsEntry) -> m.TripMetrics:
         miles_covered=e.miles_covered,
         avg_car_age=_opt(e.avg_car_age),
         pct_new_trips=_opt(e.pct_new_trips),
-        fleet_mix=fleet_mix,
+        fleet_mix=_fleet_mix(e.additional_properties),
+    )
+
+
+def bus_trip_metrics(e: g.BusTripMetricsEntry) -> m.BusTripMetrics:
+    # The spec only describes the speed and fleet fields, so they arrive as extras.
+    extra = e.additional_properties
+    return m.BusTripMetrics(
+        date=_date(e.date),
+        route=e.route,
+        count=e.count,
+        total_time=e.total_time,
+        miles_covered=e.miles_covered,
+        n_traversals=e.n_traversals,
+        median_speed_mph=_extra_float(extra, "median_speed_mph"),
+        mean_speed_mph=_extra_float(extra, "mean_speed_mph"),
+        fleet_trips=_extra_float(extra, "fleet_trips"),
+        avg_bus_age=_extra_float(extra, "avg_bus_age"),
+        pct_battery_trips=_extra_float(extra, "pct_battery_trips"),
+        fleet_mix=_fleet_mix(extra),
+    )
+
+
+def bus_route_speed(e: g.BusSpeedLeaderboardEntry) -> m.BusRouteSpeed:
+    return m.BusRouteSpeed(
+        route=e.route,
+        count=e.count,
+        total_time=e.total_time,
+        miles_covered=e.miles_covered,
+        n_traversals=e.n_traversals,
+    )
+
+
+def commuter_rail_trip_metrics(
+    e: g.CrTripMetricsEntry,
+) -> m.CommuterRailTripMetrics:
+    return m.CommuterRailTripMetrics(
+        date=_date(e.date),
+        route=e.route,
+        fleet_trips=_opt(e.fleet_trips),
+        avg_cab_car_age=_extra_float(e.additional_properties, "avg_cab_car_age"),
+        fleet_mix=_fleet_mix(e.additional_properties),
     )
 
 
@@ -359,6 +413,76 @@ def speed_restrictions(r: g.SpeedRestrictionsResponse) -> m.SpeedRestrictions:
         available=r.available,
         date=_opt_date(r.date),
         zones=tuple(_speed_restriction(z) for z in _opt(r.zones) or ()),
+    )
+
+
+def _reliability_counts(
+    c: g.ReliabilityCounts | None | Unset,
+) -> m.ReliabilityCounts | None:
+    c = _opt(c)
+    if c is None:
+        return None
+    return m.ReliabilityCounts(
+        otp_numerator=c.otp_numerator,
+        otp_denominator=c.otp_denominator,
+        cancelled=c.cancelled,
+    )
+
+
+def reliability(e: g.ReliabilityEntry) -> m.Reliability:
+    return m.Reliability(
+        date=_date(e.date),
+        days=e.days,
+        completed=_opt(e.completed),
+        on_time=_opt(e.on_time),
+        requests=_opt(e.requests),
+        no_shows=_opt(e.no_shows),
+        missed=_opt(e.missed),
+        otp_numerator=_opt(e.otp_numerator),
+        otp_denominator=_opt(e.otp_denominator),
+        cancelled=_opt(e.cancelled),
+        peak=_reliability_counts(e.peak),
+        off_peak=_reliability_counts(e.off_peak),
+    )
+
+
+def _scorecard_direction(d: g.CrScorecardDirection) -> m.ScorecardDirection:
+    return m.ScorecardDirection(
+        trips=_opt(d.trips),
+        first_trip=_opt_seconds(d.first_trip),
+        last_trip=_opt_seconds(d.last_trip),
+        max_gap_midday=_opt(d.max_gap_midday),
+        max_gap_evening=_opt(d.max_gap_evening),
+        hours_at_target=_opt(d.hours_at_target),
+        clock_face_share=_opt(d.clock_face_share),
+        by_hour=tuple(_opt(d.by_hour) or ()),
+    )
+
+
+def commuter_rail_scorecard(e: g.CrScorecardEntry) -> m.CommuterRailScorecard:
+    return m.CommuterRailScorecard(
+        date=_opt_date(e.date),
+        route_id=_opt(e.route_id),
+        days=e.days,
+        outbound=_scorecard_direction(e.outbound),
+        inbound=_scorecard_direction(e.inbound),
+        peak_trips=_opt(e.peak_trips),
+        reverse_peak_trips=_opt(e.reverse_peak_trips),
+    )
+
+
+# Weather
+
+
+def weather(e: g.WeatherHourlyEntry) -> m.Weather:
+    return m.Weather(
+        timestamp=_dt(e.timestamp),
+        temperature_f=_opt(e.temperature_f),
+        weather_code=_opt(e.weather_code),
+        condition=_opt(e.condition),
+        precipitation_in=_opt(e.precipitation_in),
+        humidity_pct=_opt(e.humidity_pct),
+        wind_mph=_opt(e.wind_mph),
     )
 
 

@@ -7,6 +7,7 @@ import datetime
 import inspect
 import json
 import pkgutil
+import re
 import typing
 from collections.abc import Callable
 from pathlib import Path
@@ -54,6 +55,15 @@ CALLS: dict[str, Callable[[TransitMatters], Any]] = {
     "get_trip_metrics": lambda tm: tm.trip_metrics(
         "2025-03-01", "2025-03-31", line="line-red", agg="daily"
     ),
+    "get_bus_trip_metrics": lambda tm: tm.bus_trip_metrics(
+        "2026-09-01", "2026-09-30", route="1", agg="daily"
+    ),
+    "get_commuter_rail_trip_metrics": lambda tm: tm.commuter_rail_trip_metrics(
+        "2026-09-01", "2026-09-30", route="CR-Fairmount", agg="daily"
+    ),
+    "get_bus_speed_leaderboard": lambda tm: tm.bus_speed_leaderboard(
+        "2026-09-01", "2026-09-30"
+    ),
     "get_scheduled_service": lambda tm: tm.scheduled_service(
         "2025-03-01", "2025-03-31", route="Red", agg="daily"
     ),
@@ -68,6 +78,17 @@ CALLS: dict[str, Callable[[TransitMatters], Any]] = {
         "2025-03-01", "2025-03-31", line="line-red", agg="daily"
     ),
     "get_time_predictions": lambda tm: tm.time_predictions("Red"),
+    "get_reliability": lambda tm: tm.reliability(
+        "2025-03-01", "2025-03-31", route="CR-Worcester", agg="weekly"
+    ),
+    "get_commuter_rail_scorecard": lambda tm: tm.commuter_rail_scorecard(
+        "2026-09-01",
+        "2026-09-30",
+        route="CR-Worcester",
+        agg="weekly",
+        day_kind="weekday",
+    ),
+    "get_weather": lambda tm: tm.weather("2026-09-01", "2026-09-01"),
     "get_service_ridership_dashboard": lambda tm: tm.service_ridership_dashboard(),
     "get_routes": lambda tm: tm.routes(),
     "get_stops_for_route": lambda tm: tm.stops("Red"),
@@ -145,17 +166,24 @@ def test_generated_fields_are_all_converted():
     # Fails when a spec sync adds a field, as a reminder to add it to a model
     # (or to IGNORED_FIELDS with a reason).
     # Only the converters' code, not IGNORED_FIELDS, which names fields too.
-    source = "".join(
+    converters = [
         inspect.getsource(fn)
         for _, fn in inspect.getmembers(_convert, inspect.isfunction)
         if fn.__module__ == _convert.__name__
-    )
+    ]
     missing = []
     for name in generated_models.__all__:
         cls = getattr(generated_models, name)
         # Request parameters and error bodies aren't converted into models.
         if not attrs.has(cls) or name.endswith("Params") or name in ERROR_BODIES:
             continue
+        # A field must be read by a converter that names its class, so that
+        # one class's field doesn't pass for another's. Classes only reached
+        # through another's attributes are named nowhere, and checked against
+        # every converter.
+        source = "".join(
+            s for s in converters if re.search(rf"\bg\.{name}\b", s)
+        ) or "".join(converters)
         for field in attrs.fields(cls):
             key = f"{name}.{field.name}"
             if field.name == "additional_properties" or key in _convert.IGNORED_FIELDS:
@@ -261,6 +289,95 @@ def test_trip_metrics_fleet_mix():
 
     assert first.fleet_mix == {"red1": 25.5, "red2": 19.6, "red3": 29.4, "red4": 25.5}
     assert first.avg_car_age == 33.2
+
+
+def test_bus_trip_metrics():
+    first = replay("get_bus_trip_metrics")[0]
+    raw = fixture("get_bus_trip_metrics")[0]
+
+    assert (first.date, first.route) == (datetime.date(2026, 9, 1), "1")
+    assert (first.count, first.n_traversals) == (raw["count"], raw["n_traversals"])
+    assert first.median_speed_mph == raw["median_speed_mph"]
+    assert (first.fleet_trips, first.avg_bus_age) == (
+        raw["fleet_trips"],
+        raw["avg_bus_age"],
+    )
+    assert first.fleet_mix == {"battery": 0, "cng": 18.7, "diesel": 0, "hybrid": 81.3}
+
+
+def test_bus_trip_metrics_without_speeds_or_fleet():
+    # Weekly entries and time-band entries have no speeds; fleet data can be missing.
+    body = [
+        {
+            "date": "2026-08-31",
+            "route": "1",
+            "count": 1276,
+            "total_time": 2871136,
+            "miles_covered": 5572.364,
+            "n_traversals": 27730,
+        }
+    ]
+    transport = httpx.MockTransport(lambda _: httpx.Response(200, json=body))
+    tm = TransitMatters(httpx_args={"transport": transport})
+
+    entry = tm.bus_trip_metrics("2026-09-01", "2026-09-30", route="1", agg="weekly")[0]
+
+    assert entry.median_speed_mph is entry.mean_speed_mph is entry.avg_bus_age is None
+    assert entry.fleet_mix == {}
+
+
+def test_commuter_rail_trip_metrics():
+    first = replay("get_commuter_rail_trip_metrics")[0]
+
+    assert (first.route, first.fleet_trips, first.avg_cab_car_age) == (
+        "CR-Fairmount",
+        55,
+        10.6,
+    )
+    assert first.fleet_mix["rotem"] == 92.7
+
+
+def test_reliability_commuter_rail():
+    first = replay("get_reliability")[0]
+
+    assert (first.date, first.days) == (datetime.date(2025, 2, 24), 2)
+    assert (first.otp_numerator, first.otp_denominator) == (36, 40)
+    assert first.off_peak == m.ReliabilityCounts(
+        otp_numerator=36, otp_denominator=40, cancelled=0
+    )
+    assert first.completed is None
+
+
+def test_reliability_the_ride():
+    body = [{"date": "2026-01-01", "days": 31, "completed": 82663, "onTime": 79227}]
+    transport = httpx.MockTransport(lambda _: httpx.Response(200, json=body))
+    tm = TransitMatters(httpx_args={"transport": transport})
+
+    entry = tm.reliability("2026-01-01", "2026-01-31", route="RIDE", agg="monthly")[0]
+
+    assert (entry.completed, entry.on_time, entry.requests) == (82663, 79227, None)
+    assert entry.peak is entry.off_peak is entry.otp_numerator is None
+
+
+def test_commuter_rail_scorecard():
+    first = replay("get_commuter_rail_scorecard")[0]
+
+    assert (first.date, first.route_id, first.days) == (
+        datetime.date(2026, 8, 31),
+        None,
+        4,
+    )
+    assert first.outbound.first_trip == datetime.timedelta(hours=4, minutes=45)
+    # 00:18 the next morning.
+    assert first.inbound.last_trip == datetime.timedelta(hours=24, minutes=18)
+    assert first.outbound.by_hour[:5] == (0.0, 0.0, 0.0, 0.0, 1.0)
+
+
+def test_weather():
+    first = replay("get_weather")[0]
+
+    assert first.timestamp == datetime.datetime(2026, 9, 1, tzinfo=EASTERN)
+    assert (first.temperature_f, first.condition) == (66.5, "clear")
 
 
 def test_scheduled_service():

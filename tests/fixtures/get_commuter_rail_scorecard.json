@@ -1,0 +1,192 @@
+[
+ {
+  "date": "2026-08-31",
+  "days": 4,
+  "outbound": {
+   "trips": 24.0,
+   "firstTrip": 17100.0,
+   "lastTrip": 85500.0,
+   "maxGapMidday": 120.0,
+   "maxGapEvening": 105.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.25,
+   "byHour": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "inbound": {
+   "trips": 23.0,
+   "firstTrip": 20880.0,
+   "lastTrip": 87480.0,
+   "maxGapMidday": 120.0,
+   "maxGapEvening": 111.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.174,
+   "byHour": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "peakTrips": 17.0,
+  "reversePeakTrips": 10.0
+ },
+ {
+  "date": "2026-09-07",
+  "days": 5,
+  "outbound": {
+   "trips": 21.2,
+   "firstTrip": 17280.0,
+   "lastTrip": 85140.0,
+   "maxGapMidday": 120.0,
+   "maxGapEvening": 111.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.2,
+   "byHour": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.8
+   ]
+  },
+  "inbound": {
+   "trips": 20.4,
+   "firstTrip": 21540.0,
+   "lastTrip": 87960.0,
+   "maxGapMidday": 120.8,
+   "maxGapEvening": 115.8,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.139,
+   "byHour": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "peakTrips": 14.4,
+  "reversePeakTrips": 8.8
+ },
+ {
+  "date": "2026-09-14",
+  "days": 5,
+  "outbound": {
+   "trips": 23.2,
+   "firstTrip": 17040.0,
+   "lastTrip": 85560.0,
+   "maxGapMidday": 111.0,
+   "maxGapEvening": 107.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.28,
+   "byHour": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "inbound": {
+   "trips": 22.4,
+   "firstTrip": 20940.0,
+   "lastTrip": 87540.0,
+   "maxGapMidday": 109.0,
+   "maxGapEvening": 111.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.219,
+   "byHour": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "peakTrips": 15.4,
+  "reversePeakTrips": 9.6
+ },
+ {
+  "date": "2026-09-21",
+  "days": 5,
+  "outbound": {
+   "trips": 24.0,
+   "firstTrip": 17100.0,
+   "lastTrip": 85500.0,
+   "maxGapMidday": 120.0,
+   "maxGapEvening": 105.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.25,
+   "byHour": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "inbound": {
+   "trips": 23.0,
+   "firstTrip": 20880.0,
+   "lastTrip": 87480.0,
+   "maxGapMidday": 120.0,
+   "maxGapEvening": 111.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.174,
+   "byHour": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "peakTrips": 17.0,
+  "reversePeakTrips": 10.0
+ },
+ {
+  "date": "2026-09-28",
+  "days": 3,
+  "outbound": {
+   "trips": 24.0,
+   "firstTrip": 17100.0,
+   "lastTrip": 85500.0,
+   "maxGapMidday": 120.0,
+   "maxGapEvening": 105.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.25,
+   "byHour": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "inbound": {
+   "trips": 23.0,
+   "firstTrip": 20880.0,
+   "lastTrip": 87480.0,
+   "maxGapMidday": 120.0,
+   "maxGapEvening": 111.0,
+   "hoursAtTarget": 0.0,
+   "clockFaceShare": 0.174,
+   "byHour": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "peakTrips": 17.0,
+  "reversePeakTrips": 10.0
+ }
+]

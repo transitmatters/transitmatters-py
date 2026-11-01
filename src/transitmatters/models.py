@@ -36,6 +36,9 @@ __all__ = [  # noqa: RUF022
     "TravelTimeStats",
     # Line metrics
     "TripMetrics",
+    "BusTripMetrics",
+    "BusRouteSpeed",
+    "CommuterRailTripMetrics",
     "LineDelays",
     "ServiceHours",
     "Ridership",
@@ -47,6 +50,12 @@ __all__ = [  # noqa: RUF022
     "TimePredictionBucket",
     "SpeedRestrictions",
     "SpeedRestriction",
+    "Reliability",
+    "ReliabilityCounts",
+    "CommuterRailScorecard",
+    "ScorecardDirection",
+    # Weather
+    "Weather",
     # Reference data
     "Routes",
     "RouteStops",
@@ -294,6 +303,76 @@ class TripMetrics(Model):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class BusTripMetrics(Model):
+    """Delivered trips on a bus route for one day, week, or month.
+
+    Average speed in miles per hour is `miles_covered / (total_time / 3600)`.
+    """
+
+    date: datetime.date
+    """Day, Monday of the week, or first day of the month."""
+    route: str
+    """Route ID, e.g. `"1"`, or the comma-separated routes requested together."""
+    count: float
+    """Trips delivered, summed over the week or month."""
+    total_time: float
+    """Total trip time in seconds."""
+    miles_covered: float
+    """Total miles covered."""
+    n_traversals: float
+    """Segment traversals measured."""
+    median_speed_mph: float | None
+    """Median speed in miles per hour, for daily entries covering the whole day."""
+    mean_speed_mph: float | None
+    """Mean speed in miles per hour, for daily entries covering the whole day."""
+    fleet_trips: float | None
+    """Trips with a known bus, if any."""
+    avg_bus_age: float | None
+    """Average bus age in years, if known."""
+    pct_battery_trips: float | None
+    """Percentage of trips run with battery-electric buses, if known."""
+    fleet_mix: dict[str, float]
+    """Percentage of trips by propulsion, e.g. `{"hybrid": 81.3, "cng": 18.7}`;
+    empty when unknown."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class BusRouteSpeed(Model):
+    """A bus route's delivered trips over a date range.
+
+    Average speed in miles per hour is `miles_covered / (total_time / 3600)`.
+    """
+
+    route: str
+    """Route ID, e.g. `"1"`."""
+    count: float
+    """Trips delivered."""
+    total_time: float
+    """Total trip time in seconds."""
+    miles_covered: float
+    """Total miles covered."""
+    n_traversals: float
+    """Segment traversals measured."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CommuterRailTripMetrics(Model):
+    """The fleet that ran a commuter rail route for one day, week, or month."""
+
+    date: datetime.date
+    """Day, Monday of the week, or first day of the month."""
+    route: str
+    """Route ID, e.g. `"CR-Fairmount"`, or `"all"`."""
+    fleet_trips: float | None
+    """Trips with a known cab car, if any."""
+    avg_cab_car_age: float | None
+    """Average cab car age in years, if known."""
+    fleet_mix: dict[str, float]
+    """Percentage of trips by fleet type, e.g. `{"rotem": 75.9, "kawasaki": 23.0}`;
+    empty when unknown."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class LineDelays(Model):
     """Alert-reported delay on a line for one day or week, in minutes, by cause."""
 
@@ -459,6 +538,123 @@ class SpeedRestrictions(Model):
     """Date of the data, which may be earlier than the requested date."""
     zones: tuple[SpeedRestriction, ...]
     """Restrictions in effect; empty when unavailable."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ReliabilityCounts(Model):
+    """On-time and cancelled commuter rail trips in one part of the day."""
+
+    otp_numerator: int
+    """Trips that ran on time."""
+    otp_denominator: int
+    """Trips measured for on-time performance."""
+    cancelled: int
+    """Cancelled trips."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Reliability(Model):
+    """On-time performance of The RIDE or commuter rail for one day, week,
+    or month.
+
+    The RIDE entries set `completed` through `missed`, and commuter rail
+    entries set `otp_numerator` through `off_peak`. The others are `None`.
+    """
+
+    date: datetime.date
+    """Day, Monday of the week, or first day of the month."""
+    days: int
+    """Service days with data in the period."""
+    completed: int | None
+    """The RIDE trips completed."""
+    on_time: int | None
+    """The RIDE trips completed on time."""
+    requests: int | None
+    """The RIDE trip requests, if recorded on every day of the period."""
+    no_shows: int | None
+    """The RIDE rider no-shows, if recorded on every day of the period."""
+    missed: int | None
+    """The RIDE missed trips, if recorded on every day of the period."""
+    otp_numerator: int | None
+    """Commuter rail trips that ran on time."""
+    otp_denominator: int | None
+    """Commuter rail trips measured for on-time performance."""
+    cancelled: int | None
+    """Commuter rail cancelled trips."""
+    peak: ReliabilityCounts | None
+    """Commuter rail counts for peak periods."""
+    off_peak: ReliabilityCounts | None
+    """Commuter rail counts outside peak periods."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ScorecardDirection(Model):
+    """Scheduled commuter rail service in one direction, at the Boston
+    terminal. Values are averages over the days measured."""
+
+    trips: float | None
+    """Trains."""
+    first_trip: datetime.timedelta | None
+    """First train, as time since midnight."""
+    last_trip: datetime.timedelta | None
+    """Last train, as time since midnight. Trains after midnight are past
+    24 hours."""
+    max_gap_midday: float | None
+    """Longest midday wait, in minutes."""
+    max_gap_evening: float | None
+    """Longest evening wait, in minutes."""
+    hours_at_target: float | None
+    """Hours from 5 AM to 1 AM with a train at least every 30 minutes."""
+    clock_face_share: float | None
+    """Share of trains on a repeating hourly pattern, from 0 to 1."""
+    by_hour: tuple[float | None, ...]
+    """Trains by hour, index 0 = midnight; empty if unavailable."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CommuterRailScorecard(Model):
+    """A commuter rail schedule measured against Regional Rail standards."""
+
+    date: datetime.date | None
+    """Day, Monday of the week, or first day of the month; `None` for
+    `"commuter-rail"`, which has one entry per route instead."""
+    route_id: str | None
+    """Route ID, for `"commuter-rail"`; otherwise `None`."""
+    days: int
+    """Days averaged."""
+    outbound: ScorecardDirection
+    """Outbound service."""
+    inbound: ScorecardDirection
+    """Inbound service."""
+    peak_trips: float | None
+    """Peak trains, both directions."""
+    reverse_peak_trips: float | None
+    """Reverse-peak trains, both directions."""
+
+
+# Weather
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Weather(Model):
+    """One hour's weather in downtown Boston."""
+
+    timestamp: datetime.datetime
+    """Start of the hour. On the night clocks fall back, the API has only one
+    1 AM entry, which is read as the first."""
+    temperature_f: float | None
+    """Air temperature in °F."""
+    weather_code: int | None
+    """WMO weather code, from Open-Meteo."""
+    condition: str | None
+    """`"clear"`, `"cloudy"`, `"fog"`, `"rain"`, `"snow"`, `"storm"`, or
+    `"unknown"`."""
+    precipitation_in: float | None
+    """Precipitation in inches."""
+    humidity_pct: int | None
+    """Relative humidity, from 0 to 100."""
+    wind_mph: float | None
+    """Wind speed in miles per hour."""
 
 
 # Reference data
