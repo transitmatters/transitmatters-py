@@ -64,7 +64,8 @@ def sync_detailed(
     """Get the stop information for a specific route.
 
      Args:
-        route_id: The route ID to look up stops for.
+        route_id: The route ID to look up stops for. Combined bus routes contain
+            slashes ("SL4/SL5"), so callers must percent-encode them ("SL4%2FSL5").
 
     Returns:
         Response: JSON response containing station/stop data including names, IDs,
@@ -100,7 +101,8 @@ def sync(
     """Get the stop information for a specific route.
 
      Args:
-        route_id: The route ID to look up stops for.
+        route_id: The route ID to look up stops for. Combined bus routes contain
+            slashes ("SL4/SL5"), so callers must percent-encode them ("SL4%2FSL5").
 
     Returns:
         Response: JSON response containing station/stop data including names, IDs,
@@ -131,7 +133,8 @@ async def asyncio_detailed(
     """Get the stop information for a specific route.
 
      Args:
-        route_id: The route ID to look up stops for.
+        route_id: The route ID to look up stops for. Combined bus routes contain
+            slashes ("SL4/SL5"), so callers must percent-encode them ("SL4%2FSL5").
 
     Returns:
         Response: JSON response containing station/stop data including names, IDs,
@@ -165,7 +168,8 @@ async def asyncio(
     """Get the stop information for a specific route.
 
      Args:
-        route_id: The route ID to look up stops for.
+        route_id: The route ID to look up stops for. Combined bus routes contain
+            slashes ("SL4/SL5"), so callers must percent-encode them ("SL4%2FSL5").
 
     Returns:
         Response: JSON response containing station/stop data including names, IDs,
