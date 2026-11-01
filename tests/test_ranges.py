@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import itertools
 import threading
 import time
 from typing import Any
@@ -11,7 +12,7 @@ from typing import Any
 import httpx
 import pytest
 
-from transitmatters import APIError, AsyncTransitMatters, TransitMatters
+from transitmatters import APIError, AsyncTransitMatters, TransitMatters, _ranges
 
 
 def headway(day: str) -> dict[str, Any]:
@@ -142,9 +143,22 @@ def test_alerts_spanning_days_are_returned_once():
 
 
 @pytest.mark.parametrize(
-    ("agg", "max_days"), [("daily", 150), ("weekly", 1050), ("monthly", 4500)]
+    ("method", "kwargs"),
+    [
+        ("trip_metrics", {"line": "line-red"}),
+        ("bus_trip_metrics", {"route": "1"}),
+        ("commuter_rail_trip_metrics", {"route": "CR-Fairmount"}),
+    ],
 )
-def test_trip_metrics_splits_long_ranges(agg, max_days):
+@pytest.mark.parametrize(
+    ("agg", "max_days", "period_start"),
+    [
+        ("daily", 150, lambda day: day),
+        ("weekly", 1050, _ranges.week_start),
+        ("monthly", 4500, _ranges.month_start),
+    ],
+)
+def test_trip_metrics_splits_long_ranges(method, kwargs, agg, max_days, period_start):
     requests: list[httpx.Request] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -152,22 +166,31 @@ def test_trip_metrics_splits_long_ranges(agg, max_days):
         return httpx.Response(200, json=[])
 
     tm = client(handler)
-    start = datetime.date(2020, 1, 1)
+    # A Wednesday in mid-month, so splits have to move to the period starts.
+    start = datetime.date(2020, 1, 15)
 
-    def spans(days: int) -> list[tuple[str, str]]:
+    def spans(days: int) -> list[tuple[datetime.date, datetime.date]]:
         requests.clear()
         end = start + datetime.timedelta(days=days - 1)
-        tm.trip_metrics(start, end, line="line-red", agg=agg)
+        getattr(tm, method)(start, end, agg=agg, **kwargs)
         return sorted(
-            (r.url.params["start_date"], r.url.params["end_date"]) for r in requests
+            (
+                datetime.date.fromisoformat(r.url.params["start_date"]),
+                datetime.date.fromisoformat(r.url.params["end_date"]),
+            )
+            for r in requests
         )
 
-    last = start + datetime.timedelta(days=max_days - 1)
-    assert spans(max_days) == [(str(start), str(last))]
-    assert spans(max_days + 1) == [
-        (str(start), str(last)),
-        (str(last + datetime.timedelta(days=1)),) * 2,
-    ]
+    assert len(spans(max_days)) == 1
+    result = spans(3 * max_days)
+    assert result[0][0] == start
+    assert result[-1][1] == start + datetime.timedelta(days=3 * max_days - 1)
+    for (_, end), (next_start, _) in itertools.pairwise(result):
+        assert next_start == end + datetime.timedelta(days=1)
+    assert all((end - span_start).days < max_days for span_start, end in result)
+    # Bus and commuter rail sum each week or month from the days requested,
+    # so a period split between two requests would come back as two halves.
+    assert all(period_start(span_start) == span_start for span_start, _ in result[1:])
 
 
 def test_trip_metrics_dedupes_by_date():

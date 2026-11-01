@@ -29,7 +29,7 @@ from typing import Any, Literal, Self
 import httpx
 
 from . import _endpoints as ep
-from ._endpoints import Agg, Call, DateLike, OneOrMany
+from ._endpoints import Agg, Call, DateLike, DayKind, DayType, OneOrMany, TimeBand
 from ._generated.client import Client
 from ._generated.models import ErrorResponse, RouteNotFoundResponse
 from ._generated.types import Response
@@ -44,6 +44,10 @@ from .errors import (
 from .lines import RouteLike
 from .models import (
     Alert,
+    BusRouteSpeed,
+    BusTripMetrics,
+    CommuterRailScorecard,
+    CommuterRailTripMetrics,
     DailyHeadwayStats,
     DailyStats,
     Dwell,
@@ -52,6 +56,7 @@ from .models import (
     Healthcheck,
     LineDelays,
     LiveAlert,
+    Reliability,
     Ridership,
     Routes,
     RouteStops,
@@ -63,6 +68,7 @@ from .models import (
     TravelTime,
     TravelTimeStats,
     TripMetrics,
+    Weather,
 )
 
 DEFAULT_BASE_URL = "https://dashboard-api.labs.transitmatters.org"
@@ -102,7 +108,8 @@ def _api_error(response: Response[Any]) -> APIError:
     status = int(response.status_code)
     parsed = response.parsed
     if isinstance(parsed, ErrorResponse):
-        # Only trip metrics documents a 403, for ranges that are too long.
+        # Only the trip metrics endpoints and the bus speed leaderboard
+        # document a 403, for ranges that are too long.
         cls = (
             RangeTooLongError
             if status == HTTPStatus.FORBIDDEN
@@ -475,6 +482,76 @@ class TransitMatters(_BaseClient):
             )
         )
 
+    def bus_trip_metrics(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: OneOrMany,
+        agg: Agg,
+        time_band: TimeBand | None = None,
+        day_type: DayType | None = None,
+    ) -> list[BusTripMetrics]:
+        """Speed and trip metrics for a bus route over an inclusive date range.
+
+        Returns one entry per day, week, or month. `route` is a bus route
+        ID, e.g. `"1"`, or several, whose trips are added together. Trip
+        counts and speeds start in December 2025.
+
+        `time_band` limits the figures to one time of day: `"early_am"`,
+        `"am_peak"`, `"midday"`, `"pm_peak"`, `"evening"`, or
+        `"late_night"`. `day_type` keeps only `"business_day"`s or only
+        `"weekend_or_holiday"`s. The API returns at most 150 entries per
+        request, so longer ranges are fetched in pieces.
+        """
+        return self._run_all(
+            ep.bus_trip_metrics(
+                self._client,
+                start_date,
+                end_date,
+                route=route,
+                agg=agg,
+                time_band=time_band,
+                day_type=day_type,
+            )
+        )
+
+    def commuter_rail_trip_metrics(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: str,
+        agg: Agg,
+    ) -> list[CommuterRailTripMetrics]:
+        """The fleet that ran a commuter rail route over an inclusive date range.
+
+        Returns one entry per day, week, or month. `route` is a commuter rail
+        route ID, e.g. `"CR-Fairmount"`, or `"all"` for the whole system.
+        Longer ranges are fetched in pieces, as in `bus_trip_metrics`.
+        """
+        return self._run_all(
+            ep.commuter_rail_trip_metrics(
+                self._client, start_date, end_date, route=route, agg=agg
+            )
+        )
+
+    def bus_speed_leaderboard(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        limit: int = 10,
+    ) -> list[BusRouteSpeed]:
+        """The slowest bus routes over an inclusive date range, slowest first.
+
+        Returns up to `limit` routes, at most 200, with their totals over the
+        range. Ranges over 150 days raise `transitmatters.RangeTooLongError`.
+        """
+        return self._run(
+            ep.bus_speed_leaderboard(self._client, start_date, end_date, limit=limit)
+        )
+
     def scheduled_service(
         self,
         start_date: DateLike,
@@ -538,13 +615,78 @@ class TransitMatters(_BaseClient):
             ep.service_hours(self._client, start_date, end_date, line=line, agg=agg)
         )
 
-    def time_predictions(self, route: RouteLike) -> list[TimePredictionWeek]:
+    def time_predictions(
+        self,
+        route: RouteLike,
+        *,
+        start_date: DateLike | None = None,
+        end_date: DateLike | None = None,
+    ) -> list[TimePredictionWeek]:
         """Weekly arrival-prediction accuracy for `route`.
 
         `route` is a `Line` or a route ID. The Green Line is reported by
-        branch, so pass e.g. `"Green-B"` rather than `Line.GREEN`.
+        branch, so pass e.g. `"Green-B"` rather than `Line.GREEN`. Returns
+        the whole history, or only weeks starting from `start_date` through
+        `end_date` when given.
         """
-        return self._run(ep.time_predictions(self._client, route))
+        return self._run(
+            ep.time_predictions(
+                self._client, route, start_date=start_date, end_date=end_date
+            )
+        )
+
+    def reliability(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: str,
+        agg: Agg,
+    ) -> list[Reliability]:
+        """On-time performance of The RIDE or commuter rail over a date range.
+
+        Returns one entry per day, week, or month. `route` is `"RIDE"`, a
+        commuter rail route ID, e.g. `"CR-Worcester"`, or `"commuter-rail"`
+        for every commuter rail route combined.
+        """
+        return self._run(
+            ep.reliability(self._client, start_date, end_date, route=route, agg=agg)
+        )
+
+    def commuter_rail_scorecard(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: str,
+        agg: Agg,
+        day_kind: DayKind,
+    ) -> list[CommuterRailScorecard]:
+        """A commuter rail schedule measured against Regional Rail standards.
+
+        `route` is a commuter rail route ID, e.g. `"CR-Worcester"`, for one
+        entry per day, week, or month. Or it's `"commuter-rail"`, for one
+        entry per route over the whole range, ignoring `agg`. `day_kind` is
+        the schedule to measure: `"weekday"`, `"saturday"`, `"sunday"`, or
+        `"all"` for every day.
+        """
+        return self._run(
+            ep.commuter_rail_scorecard(
+                self._client,
+                start_date,
+                end_date,
+                route=route,
+                agg=agg,
+                day_kind=day_kind,
+            )
+        )
+
+    def weather(self, start_date: DateLike, end_date: DateLike) -> list[Weather]:
+        """Hourly weather in downtown Boston over an inclusive date range.
+
+        Data starts in April 2026. Days without data are left out.
+        """
+        return self._run(ep.weather(self._client, start_date, end_date))
 
     def service_ridership_dashboard(self) -> ServiceRidershipDashboard:
         """Combined service and ridership data behind the overview dashboard."""
@@ -756,6 +898,56 @@ class AsyncTransitMatters(_BaseClient):
             )
         )
 
+    async def bus_trip_metrics(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: OneOrMany,
+        agg: Agg,
+        time_band: TimeBand | None = None,
+        day_type: DayType | None = None,
+    ) -> list[BusTripMetrics]:
+        """Speed and trip metrics for a bus route over an inclusive date range."""
+        return await self._run_all(
+            ep.bus_trip_metrics(
+                self._client,
+                start_date,
+                end_date,
+                route=route,
+                agg=agg,
+                time_band=time_band,
+                day_type=day_type,
+            )
+        )
+
+    async def commuter_rail_trip_metrics(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: str,
+        agg: Agg,
+    ) -> list[CommuterRailTripMetrics]:
+        """The fleet that ran a commuter rail route over an inclusive date range."""
+        return await self._run_all(
+            ep.commuter_rail_trip_metrics(
+                self._client, start_date, end_date, route=route, agg=agg
+            )
+        )
+
+    async def bus_speed_leaderboard(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        limit: int = 10,
+    ) -> list[BusRouteSpeed]:
+        """The slowest bus routes over an inclusive date range, slowest first."""
+        return await self._run(
+            ep.bus_speed_leaderboard(self._client, start_date, end_date, limit=limit)
+        )
+
     async def scheduled_service(
         self,
         start_date: DateLike,
@@ -806,9 +998,57 @@ class AsyncTransitMatters(_BaseClient):
             ep.service_hours(self._client, start_date, end_date, line=line, agg=agg)
         )
 
-    async def time_predictions(self, route: RouteLike) -> list[TimePredictionWeek]:
+    async def time_predictions(
+        self,
+        route: RouteLike,
+        *,
+        start_date: DateLike | None = None,
+        end_date: DateLike | None = None,
+    ) -> list[TimePredictionWeek]:
         """Weekly arrival-prediction accuracy for `route`."""
-        return await self._run(ep.time_predictions(self._client, route))
+        return await self._run(
+            ep.time_predictions(
+                self._client, route, start_date=start_date, end_date=end_date
+            )
+        )
+
+    async def reliability(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: str,
+        agg: Agg,
+    ) -> list[Reliability]:
+        """On-time performance of The RIDE or commuter rail over a date range."""
+        return await self._run(
+            ep.reliability(self._client, start_date, end_date, route=route, agg=agg)
+        )
+
+    async def commuter_rail_scorecard(
+        self,
+        start_date: DateLike,
+        end_date: DateLike,
+        *,
+        route: str,
+        agg: Agg,
+        day_kind: DayKind,
+    ) -> list[CommuterRailScorecard]:
+        """A commuter rail schedule measured against Regional Rail standards."""
+        return await self._run(
+            ep.commuter_rail_scorecard(
+                self._client,
+                start_date,
+                end_date,
+                route=route,
+                agg=agg,
+                day_kind=day_kind,
+            )
+        )
+
+    async def weather(self, start_date: DateLike, end_date: DateLike) -> list[Weather]:
+        """Hourly weather in downtown Boston over an inclusive date range."""
+        return await self._run(ep.weather(self._client, start_date, end_date))
 
     async def service_ridership_dashboard(self) -> ServiceRidershipDashboard:
         """Combined service and ridership data behind the overview dashboard."""

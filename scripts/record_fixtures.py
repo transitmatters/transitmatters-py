@@ -32,8 +32,11 @@ UNTRIMMED = {"get_stops_for_route"}
 _RANGE = {"start_date": "2025-03-03", "end_date": "2025-03-07"}
 _MONTH = {"start_date": "2025-03-01", "end_date": "2025-03-31"}
 _QUARTER = {"start_date": "2025-01-01", "end_date": "2025-03-31"}
+# Bus speeds start in December 2025, and weather in April 2026.
+_RECENT_MONTH = {"start_date": "2026-09-01", "end_date": "2026-09-30"}
 
-# Endpoint module -> (path, query params). Red Line, Alewife to Braintree.
+# Endpoint module -> (path, query params). Red Line, Alewife to Braintree,
+# except for the endpoints that only cover other modes.
 REQUESTS: dict[str, tuple[str, dict[str, Any]]] = {
     "get_healthcheck": ("/api/healthcheck", {}),
     "get_headways": ("/api/headways/2025-03-04", {"stop": "70061"}),
@@ -80,6 +83,32 @@ REQUESTS: dict[str, tuple[str, dict[str, Any]]] = {
     "get_service_ridership_dashboard": ("/api/service_ridership_dashboard", {}),
     "get_routes": ("/api/routes", {}),
     "get_stops_for_route": ("/api/stops/Red", {}),
+    "get_bus_trip_metrics": (
+        "/api/bustripmetrics",
+        {**_RECENT_MONTH, "route": "1", "agg": "daily"},
+    ),
+    "get_commuter_rail_trip_metrics": (
+        "/api/crtripmetrics",
+        {**_RECENT_MONTH, "route": "CR-Fairmount", "agg": "daily"},
+    ),
+    "get_bus_speed_leaderboard": ("/api/busspeedleaderboard", _RECENT_MONTH),
+    "get_reliability": (
+        "/api/reliability",
+        {**_MONTH, "route_id": "CR-Worcester", "agg": "weekly"},
+    ),
+    "get_commuter_rail_scorecard": (
+        "/api/crscorecard",
+        {
+            **_RECENT_MONTH,
+            "route_id": "CR-Worcester",
+            "agg": "weekly",
+            "day_kind": "weekday",
+        },
+    ),
+    "get_weather": (
+        "/api/weather",
+        {"start_date": "2026-09-01", "end_date": "2026-09-01"},
+    ),
 }
 
 

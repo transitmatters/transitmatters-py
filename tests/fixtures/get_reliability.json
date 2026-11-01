@@ -1,0 +1,87 @@
+[
+ {
+  "date": "2025-02-24",
+  "days": 2,
+  "cancelled": 0,
+  "offPeak": {
+   "cancelled": 0,
+   "otpDenominator": 40,
+   "otpNumerator": 36
+  },
+  "otpDenominator": 40,
+  "otpNumerator": 36,
+  "peak": {
+   "cancelled": 0,
+   "otpDenominator": 0,
+   "otpNumerator": 0
+  }
+ },
+ {
+  "date": "2025-03-03",
+  "days": 7,
+  "cancelled": 0,
+  "offPeak": {
+   "cancelled": 0,
+   "otpDenominator": 230,
+   "otpNumerator": 218
+  },
+  "otpDenominator": 315,
+  "otpNumerator": 286,
+  "peak": {
+   "cancelled": 0,
+   "otpDenominator": 85,
+   "otpNumerator": 68
+  }
+ },
+ {
+  "date": "2025-03-10",
+  "days": 7,
+  "cancelled": 0,
+  "offPeak": {
+   "cancelled": 0,
+   "otpDenominator": 231,
+   "otpNumerator": 215
+  },
+  "otpDenominator": 316,
+  "otpNumerator": 296,
+  "peak": {
+   "cancelled": 0,
+   "otpDenominator": 85,
+   "otpNumerator": 81
+  }
+ },
+ {
+  "date": "2025-03-17",
+  "days": 7,
+  "cancelled": 0,
+  "offPeak": {
+   "cancelled": 0,
+   "otpDenominator": 230,
+   "otpNumerator": 217
+  },
+  "otpDenominator": 315,
+  "otpNumerator": 288,
+  "peak": {
+   "cancelled": 0,
+   "otpDenominator": 85,
+   "otpNumerator": 71
+  }
+ },
+ {
+  "date": "2025-03-24",
+  "days": 7,
+  "cancelled": 0,
+  "offPeak": {
+   "cancelled": 0,
+   "otpDenominator": 230,
+   "otpNumerator": 226
+  },
+  "otpDenominator": 315,
+  "otpNumerator": 292,
+  "peak": {
+   "cancelled": 0,
+   "otpDenominator": 85,
+   "otpNumerator": 66
+  }
+ }
+]

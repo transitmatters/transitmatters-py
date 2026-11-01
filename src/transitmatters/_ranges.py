@@ -19,15 +19,36 @@ def days(start: datetime.date, end: datetime.date) -> list[datetime.date]:
     return [start + i * _DAY for i in range((end - start).days + 1)]
 
 
+def week_start(day: datetime.date) -> datetime.date:
+    """The Monday of `day`'s week."""
+    return day - day.weekday() * _DAY
+
+
+def month_start(day: datetime.date) -> datetime.date:
+    """The first day of `day`'s month."""
+    return day.replace(day=1)
+
+
 def spans(
-    start: datetime.date, end: datetime.date, max_days: int
+    start: datetime.date,
+    end: datetime.date,
+    max_days: int,
+    period_start: Callable[[datetime.date], datetime.date] | None = None,
 ) -> list[tuple[datetime.date, datetime.date]]:
     """Contiguous inclusive ranges covering `start` through `end`, none
-    longer than `max_days` days."""
+    longer than `max_days` days.
+
+    With `period_start`, such as `week_start`, ranges only split where a
+    period starts, so no period is divided between two of them.
+    """
     _check(start, end)
     result = []
     while start <= end:
         stop = min(start + (max_days - 1) * _DAY, end)
+        if period_start is not None and stop < end:
+            boundary = period_start(stop + _DAY)
+            if boundary > start:
+                stop = boundary - _DAY
         result.append((start, stop))
         start = stop + _DAY
     return result

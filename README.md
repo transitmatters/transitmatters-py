@@ -57,11 +57,17 @@ concurrently.
 | Headway statistics, bunching, and on-time counts at a stop | `TransitMatters.aggregate_headways` | a day |
 | Dwell-time statistics at a stop | `TransitMatters.aggregate_dwells` | a day |
 | Trip count, speed, and miles for a rapid transit line | `TransitMatters.trip_metrics` | a day, week, or month |
+| ...for a bus route | `TransitMatters.bus_trip_metrics` | a day, week, or month |
+| Which bus routes were slowest? | `TransitMatters.bus_speed_leaderboard` | a route |
+| Which trains ran a commuter rail route | `TransitMatters.commuter_rail_trip_metrics` | a day, week, or month |
+| On-time performance of The RIDE or commuter rail | `TransitMatters.reliability` | a day, week, or month |
+| A commuter rail schedule against Regional Rail standards | `TransitMatters.commuter_rail_scorecard` | a day, week, or month, or a route |
 | Minutes of delay on a line, by cause | `TransitMatters.line_delays` | a day or week |
 | Number of scheduled trips on a route | `TransitMatters.scheduled_service` | a day, week, or month, in `.counts` |
 | Scheduled vs. delivered service hours | `TransitMatters.service_hours` | a day, week, or month |
 | Ridership on a line | `TransitMatters.ridership` | a week |
 | How accurate arrival predictions were | `TransitMatters.time_predictions` | a week |
+| Hourly weather in Boston | `TransitMatters.weather` | an hour |
 
 **Right now, and system-wide.**
 
@@ -152,7 +158,7 @@ except NotFoundError as e:
 | --- | --- |
 | `BadRequestError` | A parameter is missing or invalid (400). |
 | `NotFoundError` | The route doesn't exist (404). |
-| `RangeTooLongError` | The date range is too long (403). `trip_metrics` splits long ranges to avoid this. |
+| `RangeTooLongError` | The date range is too long (403). The trip metrics methods split long ranges to avoid this; `bus_speed_leaderboard` can't, so keep its range to 150 days. |
 | `ServerError` | The API failed (5xx). |
 | `NetworkError` | No response arrived: the connection failed or timed out. |
 

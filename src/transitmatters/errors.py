@@ -49,9 +49,11 @@ class BadRequestError(APIError):
 
 
 class RangeTooLongError(APIError):
-    """The date range has too many entries for the aggregation level (HTTP 403).
+    """The date range is too long for the endpoint (HTTP 403).
 
-    `TransitMatters.trip_metrics` splits long ranges to avoid this.
+    The trip metrics methods, such as `TransitMatters.trip_metrics`, split
+    long ranges to avoid this. `TransitMatters.bus_speed_leaderboard` can't,
+    so it raises this for ranges over 150 days.
     """
 
 
